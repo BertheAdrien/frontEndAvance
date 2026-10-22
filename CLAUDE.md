@@ -68,6 +68,10 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   scripts dans la CSP.
 - Le chatbot du niveau 6 est **simulé** (aucun appel à une API de LLM).
 
+## Déroulé des étapes
+Le développement suit `docs/PLAN.md` (une étape = une session = un commit).
+Appliquer les « Règles communes » de ce fichier à chaque étape.
+
 ## Conventions
 - Documentation et messages de commit en français.
 - Accessibilité visée : WCAG 2.2 AA (vérifiée avec Lighthouse).
