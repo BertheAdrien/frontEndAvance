@@ -57,6 +57,11 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
 - Nouveau niveau : déclarer son composant dans
   `src/app/levels/level-components.ts` (entrées `level`, `mode`) ; côté
   serveur, le mode se lit avec `getLevelMode(event)` (`src/server/mode.ts`)
+- Pas de `declare global` dans un fichier de composant : le build Analog
+  retombe alors en JIT pour toute l'app (SSR en erreur « JIT compiler
+  unavailable », sans erreur au build ni en test). Typer par un cast local.
+- Routes API d'un niveau : préfixe dédié (`/api/<levelId>/…`), pas sous
+  `/api/levels/[id]/` qui porte l'API des flags.
 
 ## Règles impératives
 - **Aucun secret dans le code ni dans Git** (clés API, mots de passe, tokens,
