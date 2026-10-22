@@ -1,0 +1,59 @@
+# Solutions — Breach Academy
+
+Solution de chaque niveau, complétée à chaque étape de `docs/PLAN.md`.
+Les flags ne figurent pas ici : ils sont dérivés de `FLAG_SECRET` et changent
+d'un déploiement à l'autre.
+
+Prérequis commun : serveur lancé avec `BREACH_VULNERABLE_MODE=true` et niveau
+basculé en mode **Vulnérable**.
+
+---
+
+## Niveau 1 — XSS réfléchie : « Le moteur de recherche bavard » (étape 2)
+
+**Faille** : le terme cherché est réaffiché via `[innerHTML]` après
+`bypassSecurityTrustHtml` (`src/app/levels/search-engine/search-level.ts`).
+Une fonction `window.revealFlag()` n'existe qu'en mode vulnérable.
+
+**Solution**
+1. Ouvrir `/niveaux/recherche-bavarde`.
+2. Rechercher :
+   ```html
+   <img src=x onerror="revealFlag()">
+   ```
+   ou ouvrir directement le lien piégé :
+   `/niveaux/recherche-bavarde?q=%3Cimg%20src%3Dx%20onerror%3DrevealFlag()%3E`
+3. L'image ne se charge pas, `onerror` s'exécute, le flag s'affiche sous la
+   recherche. Le copier dans « Soumettre le flag ».
+
+**Pièges**
+- `<script>alert(1)</script>` ne marche pas : une balise `script` insérée par
+  `innerHTML` n'est jamais exécutée. Il faut un attribut d'événement
+  (`onerror`, `onload`, `onfocus`…).
+- Raccourci : taper `revealFlag()` dans la console des DevTools fonctionne aussi
+  (c'est du JavaScript exécuté dans la page).
+
+**En mode sécurisé** : le payload s'affiche comme du texte (interpolation
+`{{ }}`), `revealFlag` n'existe pas, et l'API répond 403.
+
+---
+
+## Niveau 2 — XSS stockée : « Le livre d'or » (étape 3)
+
+_À compléter._
+
+## Niveau 3 — CSP : « Le mur invisible » (étape 4)
+
+_À compléter._
+
+## Niveau 4 — CSRF : « Le virement fantôme » (étape 5)
+
+_À compléter._
+
+## Niveau 5 — Secrets : « Le coffre qui fuit » (étape 6)
+
+_À compléter._
+
+## Niveau 6 — Injection de prompt : « Le chatbot trop serviable » (étape 7)
+
+_À compléter._
