@@ -22,15 +22,12 @@ Règles communes à toutes les étapes (l'agent les applique sans qu'on les rép
 - ajouter à `CLAUDE.md` uniquement les faits non évidents découverts (piège,
   convention), jamais de journal de bord.
 
-## Décision à prendre avant l'étape 1
+## Décision prise : mode vulnérable sur le VPS
 
-**Le mode vulnérable sur le VPS.** `CLAUDE.md` dit « jamais en production »,
-mais sans mode vulnérable, personne ne peut jouer sur le site déployé.
-Proposition : les failles ne touchent que des faux services isolés (fausse
-banque, faux bot, chatbot simulé) ; les vraies parties du site (progression,
-API des flags) restent toujours sécurisées. On autorise donc
-`BREACH_VULNERABLE_MODE=true` sur le VPS, et on met à jour la règle de
-`CLAUDE.md` en conséquence.
+Validé : `BREACH_VULNERABLE_MODE=true` sur le VPS pour que le jeu soit jouable.
+Les failles ne touchent que des faux services isolés (fausse banque, faux bot,
+chatbot simulé) ; les vraies parties du site (progression, API des flags)
+restent toujours sécurisées. Règle reportée dans `CLAUDE.md`.
 
 ---
 

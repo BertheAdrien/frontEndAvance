@@ -61,8 +61,11 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   dans `vite.config.ts`, appliqué en CI). C'est un plancher indicatif, **pas
   un objectif à atteindre à tout prix** : la pertinence des tests prime.
 - Code volontairement vulnérable (démo pédagogique) : uniquement derrière le flag
-  `BREACH_VULNERABLE_MODE` (désactivé par défaut, jamais en production), et
-  marqué par un commentaire `// VULNERABLE (démo):` expliquant la faille.
+  `BREACH_VULNERABLE_MODE` (désactivé par défaut, activé sur le VPS pour que le
+  jeu soit jouable), et marqué par un commentaire `// VULNERABLE (démo):`
+  expliquant la faille. Les failles ne touchent **que des faux services isolés**
+  (fausse banque, faux bot, chatbot simulé) ; les vraies parties du site
+  (progression, API des flags, sessions) restent toujours sécurisées.
 - Hors code vulnérable assumé : ne jamais utiliser `bypassSecurityTrust*`,
   `innerHTML` non nettoyé, ni `'unsafe-inline'` / `'unsafe-eval'` pour les
   scripts dans la CSP.
