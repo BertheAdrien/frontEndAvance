@@ -10,6 +10,7 @@ const level = (order: number): Level => ({
   theme: 'XSS',
   title: `Niveau ${order}`,
   summary: 'Résumé',
+  instructions: '',
   story: '',
   flag: `BREACH{secret_${order}}`,
 });

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { createApp, eventHandler, toWebHandler } from 'h3';
+import { createApp, eventHandler, getRequestHeader, toWebHandler } from 'h3';
 
 import { PLAYER_COOKIE, getPlayerId } from './player';
 
@@ -34,5 +34,29 @@ describe('getPlayerId', () => {
     const response = await call(`${PLAYER_COOKIE}=' OR 1=1 --`);
 
     expect((await response.json()).playerId).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('garde le même identifiant pour toute la requête, même appelé plusieurs fois', async () => {
+    const twice = toWebHandler(
+      createApp().use(eventHandler((event) => ({ first: getPlayerId(event), second: getPlayerId(event) }))),
+    );
+
+    const { first, second } = await (await twice(new Request('http://localhost/'))).json();
+
+    expect(second).toBe(first);
+  });
+
+  it("transmet l'identifiant créé à la suite de la requête (rendu SSR et appels internes)", async () => {
+    const downstream = toWebHandler(
+      createApp()
+        .use(eventHandler((event) => void getPlayerId(event)))
+        .use(eventHandler((event) => ({ cookie: getRequestHeader(event, 'cookie') }))),
+    );
+
+    const response = await downstream(new Request('http://localhost/', { headers: { cookie: 'theme=dark' } }));
+    const { cookie } = await response.json();
+    const created = /ba_player=([^;]+)/.exec(response.headers.get('set-cookie') ?? '')?.[1];
+
+    expect(cookie).toBe(`theme=dark; ${PLAYER_COOKIE}=${created}`);
   });
 });

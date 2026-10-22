@@ -7,8 +7,8 @@ import type { Level } from './catalog';
 import { getLevelsForPlayer, submitFlag } from './level.service';
 
 const levels: Level[] = [
-  { id: 'n1', order: 1, theme: 'XSS', title: 'N1', summary: '', story: '', flag: 'BREACH{un}' },
-  { id: 'n2', order: 2, theme: 'CSP', title: 'N2', summary: '', story: '', flag: 'BREACH{deux}' },
+  { id: 'n1', order: 1, theme: 'XSS', title: 'N1', summary: '', instructions: '', story: '', flag: 'BREACH{un}' },
+  { id: 'n2', order: 2, theme: 'CSP', title: 'N2', summary: '', instructions: '', story: '', flag: 'BREACH{deux}' },
 ];
 
 describe('service des niveaux (SQLite en mémoire)', () => {

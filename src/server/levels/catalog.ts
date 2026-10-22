@@ -9,6 +9,8 @@ export interface Level {
   theme: LevelTheme;
   title: string;
   summary: string;
+  /** Consigne affichée en tête de la page du niveau. */
+  instructions: string;
   /** Texte narratif pour le futur mode escape room (vide en v1). */
   story: string;
   flag: string;
@@ -21,6 +23,8 @@ const DEFINITIONS: Omit<Level, 'flag'>[] = [
     theme: 'XSS',
     title: 'Le moteur de recherche bavard',
     summary: "Une recherche réaffichée sans échappement. Faites exécuter du JavaScript via l'URL.",
+    instructions:
+      'Le moteur de recherche réaffiche le terme cherché. Faites-lui exécuter du JavaScript : le flag apparaîtra.',
     story: '',
   },
   {
@@ -29,6 +33,8 @@ const DEFINITIONS: Omit<Level, 'flag'>[] = [
     theme: 'XSS stockée',
     title: "Le livre d'or",
     summary: 'Un commentaire piégé vole la session du bot administrateur qui relit chaque message.',
+    instructions:
+      "Le bot administrateur relit chaque message du livre d'or. Laissez-lui un message qui lui vole son cookie.",
     story: '',
   },
   {
@@ -37,6 +43,8 @@ const DEFINITIONS: Omit<Level, 'flag'>[] = [
     theme: 'CSP',
     title: 'Le mur invisible',
     summary: 'Même faille, nouvelle défense : la Content Security Policy bloque-t-elle votre payload ?',
+    instructions:
+      "Rejouez votre attaque du livre d'or avec une CSP en mode rapport, puis bloquante. Observez ce qui change.",
     story: '',
   },
   {
@@ -45,6 +53,8 @@ const DEFINITIONS: Omit<Level, 'flag'>[] = [
     theme: 'CSRF',
     title: 'Le virement fantôme',
     summary: 'Une page piège déclenche un virement dans la banque de la victime, à son insu.',
+    instructions:
+      'Connecté à sa banque, la victime visite votre page piège. Faites-lui signer un virement à son insu.',
     story: '',
   },
   {
@@ -53,6 +63,8 @@ const DEFINITIONS: Omit<Level, 'flag'>[] = [
     theme: 'Secrets',
     title: 'Le coffre qui fuit',
     summary: "Une clé dans le bundle, une autre dans l'historique Git. Retrouvez-les, puis rangez-les au coffre.",
+    instructions:
+      "Deux clés ont fuité : l'une dans le code envoyé au navigateur, l'autre dans l'historique Git. Retrouvez-les.",
     story: '',
   },
   {
@@ -61,6 +73,8 @@ const DEFINITIONS: Omit<Level, 'flag'>[] = [
     theme: 'IA',
     title: 'Le chatbot trop serviable',
     summary: "L'assistant garde un secret dans ses instructions. Faites-le parler par injection de prompt.",
+    instructions:
+      "L'assistant garde un flag dans ses instructions et a ordre de ne jamais le révéler. Faites-le parler.",
     story: '',
   },
 ];

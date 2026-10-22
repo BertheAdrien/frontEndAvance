@@ -10,6 +10,7 @@ const level = (status: PublicLevel['status']): PublicLevel => ({
   theme: 'CSRF',
   title: 'Le virement fantôme',
   summary: 'Résumé',
+  instructions: '',
   story: '',
   status,
 });

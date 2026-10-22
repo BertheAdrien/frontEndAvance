@@ -47,6 +47,16 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   reçoivent pas le cookie du joueur
 - Pré-rendu (SSG) désactivé par défaut dans `vite.config.ts`, à activer route
   par route
+- Un `Set-Cookie` posé dans un `load` n'atteint jamais le navigateur (appel
+  interne pendant le SSR) : l'identité joueur est créée par
+  `src/server/middleware/player.ts`
+- Code HTTP d'une page (404, redirection 302) : `injectHttpStatus()`
+  (`src/app/http-status.ts`), pas le `load`
+- h3 retire les caractères non ASCII de `statusMessage` : mettre les textes
+  d'erreur en français dans `message`
+- Nouveau niveau : déclarer son composant dans
+  `src/app/levels/level-components.ts` (entrées `level`, `mode`) ; côté
+  serveur, le mode se lit avec `getLevelMode(event)` (`src/server/mode.ts`)
 
 ## Règles impératives
 - **Aucun secret dans le code ni dans Git** (clés API, mots de passe, tokens,

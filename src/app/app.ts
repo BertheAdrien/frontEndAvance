@@ -17,7 +17,7 @@ import { SiteHeader } from './layout/site-header';
     </main>
     <footer class="flex flex-wrap justify-between gap-3 border-t border-line px-8 py-6 text-sm text-muted">
       <span>Breach Academy — projet pédagogique.</span>
-      <span>Le mode vulnérable n'existe qu'en local ; il est désactivé en production.</span>
+      <span>Les failles ne visent que des services factices, isolés du reste du site.</span>
     </footer>
   `,
 })
