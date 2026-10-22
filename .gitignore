@@ -27,3 +27,12 @@ Thumbs.db
 
 # Tests / coverage
 coverage/
+
+# Angular / Analog
+.nx/
+.vitest/
+.history/
+
+# SQLite
+*.db
+*.sqlite
