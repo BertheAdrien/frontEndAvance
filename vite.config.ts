@@ -13,7 +13,10 @@ export default defineConfig(({ mode }) => ({
     mainFields: ['module'],
   },
   plugins: [
-    analog(),
+    analog({
+      // Pas de pré-rendu par défaut : l'accueil dépend du joueur (SSR). Le SSG sera activé route par route.
+      prerender: { routes: [] },
+    }),
     tailwindcss()
   ],
   test: {

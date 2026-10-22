@@ -34,6 +34,20 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
 - `npm test` — tests Vitest une fois ; `npm run test:watch` en continu
 - `npm run test:coverage` — tests + couverture (échoue sous le seuil)
 
+## Architecture
+- `src/app/pages/` : routes (fichiers `*.page.ts`), données serveur via un
+  `*.server.ts` voisin (`load` + `injectLoad`)
+- `src/server/` : logique serveur (SQLite, niveaux, joueur) et routes Nitro
+- `src/shared/` : types partagés client/serveur (jamais de flag côté client)
+- Joueur anonyme identifié par le cookie `ba_player` (HttpOnly, SameSite=Lax)
+- Flags dérivés de `FLAG_SECRET` (HMAC), jamais écrits dans le dépôt
+- Variables d'environnement : voir `.env.example`
+- SSR : `forwardCookieInterceptor` doit rester **avant**
+  `requestContextInterceptor` dans `app.config.ts`, sinon les `load` ne
+  reçoivent pas le cookie du joueur
+- Pré-rendu (SSG) désactivé par défaut dans `vite.config.ts`, à activer route
+  par route
+
 ## Règles impératives
 - **Aucun secret dans le code ni dans Git** (clés API, mots de passe, tokens,
   clés VAPID…). Les secrets sont lus à l'exécution (variables d'environnement /

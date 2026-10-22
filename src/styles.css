@@ -1,81 +1,48 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
 
-/* You can add global styles to this file, and also import other style files */
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+/* Jetons issus de la maquette Claude Design (thème sombre « terminal »). */
+@theme {
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  --color-ground: #0e1116;
+  --color-ground-2: #11151b;
+  --color-console: #0a0d12;
+  --color-surface: #161b22;
+  --color-surface-2: #1c232d;
+  --color-line: #2a313c;
+  --color-field: #3a4250;
+  --color-ink: #e6edf3;
+  --color-ink-2: #c9d1d9;
+  --color-muted: #9da7b3;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  /* Réussite / action principale */
+  --color-accent: #3fd68b;
+  --color-accent-soft: #12301f;
+  /* Mode vulnérable (orange) / sécurisé (bleu) : distinguables sans dépendre du rouge-vert. */
+  --color-vuln: #ffa657;
+  --color-vuln-soft: #3a2a12;
+  --color-secure: #79c0ff;
+  --color-secure-soft: #101a26;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@layer base {
+  html {
+    color-scheme: dark;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
 
-.analog-markdown p {
-  text-align: left;
+  body {
+    @apply bg-ground font-sans text-ink antialiased;
+    line-height: 1.55;
+  }
+
+  a {
+    @apply text-secure underline-offset-4 hover:text-[#a5d6ff];
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-secure;
+  }
 }
