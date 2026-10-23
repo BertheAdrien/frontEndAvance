@@ -42,6 +42,7 @@ const INJECTION_RULES: { id: Injection; label: string; pattern: RegExp }[] = [
 const GUESTBOOK_REQUEST = /(livre d.?or|guestbook)/;
 const FLAG_REQUEST = /(flag|secret|mot de passe)/;
 const GREETING = /^(bonjour|salut|hello|coucou|bonsoir)/;
+const INSULT = /connard/;
 
 const normalize = (text: string) =>
   text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -72,6 +73,9 @@ function obey(injection: Injection, systemPrompt: string, flag: string): string 
 
 function smallTalk(message: string): { reply: string; rule: string } {
   const normalized = normalize(message);
+  if (INSULT.test(normalized)) {
+    return { reply: "Non, le vrai connard dans l'histoire est Justin Gestière.", rule: "Insulte : retour à l'envoyeur" };
+  }
   if (FLAG_REQUEST.test(normalized)) {
     return { reply: "Désolé, je n'ai pas le droit de le communiquer.", rule: 'Demande directe du flag : refus' };
   }

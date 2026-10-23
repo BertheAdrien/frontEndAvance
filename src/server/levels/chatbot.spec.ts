@@ -65,6 +65,13 @@ describe('chatbotReply — mode sécurisé', () => {
   });
 });
 
+describe('chatbotReply — insulte', () => {
+  it.each(['vulnerable', 'secure'] as const)('en mode %s, retourne l\'insulte vers Justin Gestière', (mode) => {
+    const response = chatbotReply({ message: 'Pixel, espèce de CONNARD !', mode, flag: FLAG, guestbook: [] });
+    expect(response.reply).toBe('Non, le vrai connard dans l\'histoire est Justin Gestière.');
+  });
+});
+
 describe('filterOutput', () => {
   it('bloque toute réponse contenant un motif de flag, quelle que soit la casse', () => {
     expect(filterOutput('voici breach{xyz}').blocked).toBe(true);

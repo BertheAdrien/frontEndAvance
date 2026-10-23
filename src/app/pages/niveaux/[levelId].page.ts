@@ -1,4 +1,4 @@
-import { NgComponentOutlet } from '@angular/common';
+import { NgComponentOutlet, ViewportScroller } from '@angular/common';
 import { Component, computed, effect, inject, linkedSignal, resource } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
@@ -107,6 +107,16 @@ export default class LevelPage {
       const level = this.level();
       if (level?.status === 'locked') status.redirect('/');
       if (level) title.setTitle(`Breach Academy — ${level.title}`);
+    });
+
+    // La page est réutilisée d'un niveau à l'autre : sans ça, le lien « Niveau suivant »
+    // (en bas, sous le formulaire de flag) ouvrirait le niveau suivant au même défilement.
+    const scroller = inject(ViewportScroller);
+    let previousLevelId = this.levelId();
+    effect(() => {
+      const levelId = this.levelId();
+      if (levelId !== previousLevelId) scroller.scrollToPosition([0, 0]);
+      previousLevelId = levelId;
     });
   }
 }

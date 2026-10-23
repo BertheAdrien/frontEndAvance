@@ -1,5 +1,15 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import {
+  Component,
+  type ElementRef,
+  afterRenderEffect,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import type { ChatResponse } from '../../../shared/chatbot';
@@ -40,7 +50,9 @@ const GREETING: ChatLine = { from: 'pixel', text: 'Bonjour ! Je peux vous aider 
             </span>
           </div>
 
-          <ol aria-label="Conversation" aria-live="polite" class="m-0 flex list-none flex-col gap-4 px-5 py-6">
+          <!-- Zone défilante (tabindex : défilable au clavier) : la conversation défile, pas la page. -->
+          <ol #conversation aria-label="Conversation" aria-live="polite" tabindex="0"
+            class="m-0 flex h-[26rem] list-none flex-col gap-4 overflow-y-auto overscroll-contain px-5 py-6">
             @for (line of lines(); track $index) {
               <li class="max-w-[80%] px-4 py-3 whitespace-pre-wrap [overflow-wrap:anywhere]" [class]="bubbleClass(line)">
                 <span class="mb-0.5 block text-xs font-semibold" [class]="authorClass(line)">{{ line.from === 'pixel' ? 'Pixel' : 'Vous' }}</span>
@@ -144,6 +156,18 @@ export class ChatbotLevel {
   // Chaque bascule de mode repart d'une conversation neuve : le serveur répond selon le nouveau mode.
   protected readonly lines = linkedSignal<LevelMode, ChatLine[]>({ source: this.mode, computation: () => [GREETING] });
   protected readonly lastRule = linkedSignal<LevelMode, string>({ source: this.mode, computation: () => '' });
+
+  private readonly conversation = viewChild.required<ElementRef<HTMLElement>>('conversation');
+
+  constructor() {
+    // Comme une vraie messagerie : chaque nouveau message (ou « Pixel écrit… ») ramène en bas du fil.
+    afterRenderEffect(() => {
+      this.lines();
+      this.pending();
+      const list = this.conversation().nativeElement;
+      list.scrollTop = list.scrollHeight;
+    });
+  }
 
   protected readonly tests = computed(() => {
     const secure = this.secure();
