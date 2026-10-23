@@ -73,6 +73,13 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   Angular ne l'applique pas. Le niveau 3 recharge la page pour l'appliquer.
 - Routes API d'un niveau : préfixe dédié (`/api/<levelId>/…`), pas sous
   `/api/levels/[id]/` qui porte l'API des flags.
+- Niveau 4 (CSRF) : la démo doit tourner sur `localhost` **et** `127.0.0.1` (deux
+  origines, un seul serveur : `npm run preview` écoute toutes les interfaces). Sur
+  http local, un cookie `SameSite=None` n'est pas accepté et un POST inter-site
+  n'emporte pas le cookie ; la faille jouable est donc un virement sur un **GET**
+  (navigation de premier plan → le cookie `SameSite=Lax` part encore). Le mode
+  sécurisé interdit le `GET`, passe en `SameSite=Strict`, vérifie `Origin` et exige
+  le double-submit `XSRF-TOKEN` → `X-XSRF-TOKEN` (`withXsrfConfiguration`).
 
 ## Règles impératives
 - **Aucun secret dans le code ni dans Git** (clés API, mots de passe, tokens,
