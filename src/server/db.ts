@@ -20,6 +20,14 @@ const SCHEMA = `
     player_id TEXT PRIMARY KEY,
     pseudonym TEXT NOT NULL UNIQUE COLLATE NOCASE
   );
+
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    endpoint   TEXT PRIMARY KEY,
+    player_id  TEXT NOT NULL,
+    p256dh     TEXT NOT NULL,
+    auth       TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `;
 
 /** Ouvre la base SQLite (`:memory:` pour les tests) et applique le schéma. */

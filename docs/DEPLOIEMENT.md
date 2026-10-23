@@ -41,6 +41,15 @@ EOF
 sudo chmod 600 /home/deploy/breach-academy/.env
 ```
 
+Notifications push (facultatif) : générer une paire de clés VAPID et l'ajouter au
+même `.env`. Sans ces trois variables, le bouton « Activer les notifications »
+n'apparaît pas.
+
+```bash
+docker run --rm node:24-alpine npx -y web-push generate-vapid-keys --json
+# puis, dans .env : VAPID_PUBLIC_KEY=…, VAPID_PRIVATE_KEY=…, VAPID_SUBJECT=mailto:<contact>
+```
+
 Clé SSH réservée à la CI (sur votre poste) :
 
 ```bash

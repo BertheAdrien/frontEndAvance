@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { injectLoad, type RouteMeta } from '@analogjs/router';
 
 import { LevelCard } from '../levels/level-card';
+import { PushToggle } from '../push/push-toggle';
 import type { load } from './index.server';
 
 export const routeMeta = {
@@ -12,7 +13,7 @@ export const routeMeta = {
 
 @Component({
   selector: 'app-home',
-  imports: [LevelCard, RouterLink],
+  imports: [LevelCard, RouterLink, PushToggle],
   template: `
     <div class="flex flex-col gap-18">
       <section aria-labelledby="hero-title" class="flex flex-wrap items-center gap-12">
@@ -73,6 +74,7 @@ export const routeMeta = {
             <li><app-level-card [level]="level" /></li>
           }
         </ol>
+        <app-push-toggle />
       </section>
 
       <section aria-labelledby="methode-title" class="flex flex-col gap-6">

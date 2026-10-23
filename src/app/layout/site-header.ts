@@ -36,6 +36,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 export class SiteHeader {
   protected readonly links = [
     { path: '/', label: 'Niveaux' },
+    { path: '/fiches', label: 'Fiches' },
     { path: '/classement', label: 'Classement' },
   ];
 }

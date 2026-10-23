@@ -102,6 +102,21 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   niveau 2) : modifier ce schéma casse aussi le niveau 6. Pour tester l'API avec
   curl sous Windows, envoyer le corps depuis un fichier UTF-8 (`--data-binary @f`),
   sinon les accents arrivent mal encodés et aucune règle ne se déclenche.
+- PWA (`vite-plugin-pwa`) : Analog résout une config client **puis** SSR avec la
+  même instance du plugin ; sans le wrapper `clientConfigOnly` de `vite.config.ts`,
+  aucun `sw.js` n'est généré (et le build ne dit rien).
+- Fiches de cours : chaque `src/content/**/*.md` devient **aussi une route**
+  (`src/content/fiches/csrf.md` → `/fiches/csrf`), habillée par
+  `pages/fiches.page.ts`. Sans `content.highlighter` dans `vite.config.ts`, le build
+  échoue sur les `.md` (PARSE_ERROR). Les `filename` d'`injectContentFiles` n'ont pas
+  de `/` initial. Le rendu Markdown d'Analog fait `bypassSecurityTrustHtml` : n'y
+  passer que du contenu du dépôt.
+- Hors ligne : `/fiches/**` est en CSR (`ssr: false`) pour que le service worker
+  serve la coquille `index.html` précachée (`navigateFallbackAllowlist`) ; les autres
+  pages ne sont pas disponibles hors ligne.
+- Push : réception dans `public/push-sw.js` (importé par le SW généré). Les
+  endpoints d'abonnement sont limités aux services push connus (anti-SSRF,
+  `src/server/push.ts`).
 
 ## Règles impératives
 - **Aucun secret dans le code ni dans Git** (clés API, mots de passe, tokens,

@@ -7,6 +7,9 @@ services:
     environment:
       FLAG_SECRET: ${FLAG_SECRET:?FLAG_SECRET manquant dans .env}
       BREACH_VULNERABLE_MODE: ${BREACH_VULNERABLE_MODE:-false}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
     volumes:
       - sqlite-data:/data
     read_only: true

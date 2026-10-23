@@ -1,8 +1,9 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { DatabaseSync } from 'node:sqlite';
 import { createApp, createRouter, toWebHandler } from 'h3';
 
+import type { PublicLevel } from '../../shared/level';
 import { openDatabase } from '../db';
 import { PLAYER_COOKIE } from '../player';
 import { createRateLimiter } from '../rate-limit';
@@ -19,15 +20,14 @@ const alice = '0b6f2c1e-6a0e-4d53-9d0a-3f4a7c2b9e11';
 describe('POST /api/levels/:id/flag', () => {
   let db: DatabaseSync;
   let handler: (request: Request) => Promise<Response>;
+  let notifyUnlocked: Mock<(playerId: string, unlocked: PublicLevel[]) => void>;
 
   beforeEach(() => {
     db = openDatabase(':memory:');
+    notifyUnlocked = vi.fn();
     const limiter = createRateLimiter({ limit: 3, windowMs: 60_000 });
-    handler = toWebHandler(
-      createApp().use(
-        createRouter().post('/api/levels/:id/flag', createFlagHandler({ db: () => db, levels: () => levels, limiter })),
-      ),
-    );
+    const flagHandler = createFlagHandler({ db: () => db, levels: () => levels, limiter, notifyUnlocked });
+    handler = toWebHandler(createApp().use(createRouter().post('/api/levels/:id/flag', flagHandler)));
   });
 
   const submit = (levelId: string, body: unknown) =>
@@ -84,5 +84,22 @@ describe('POST /api/levels/:id/flag', () => {
     expect(response.status).toBe(429);
     expect(Number(response.headers.get('retry-after'))).toBeGreaterThan(0);
     expect(statuses()).toEqual(['available', 'locked']);
+  });
+
+  it('notifie le joueur du niveau que sa capture vient de débloquer', async () => {
+    await submit('n1', { flag: 'BREACH{un}' });
+
+    expect(notifyUnlocked).toHaveBeenCalledOnce();
+    expect(notifyUnlocked).toHaveBeenCalledWith(alice, [expect.objectContaining({ id: 'n2', status: 'available' })]);
+  });
+
+  it('ne renotifie pas quand un flag déjà capturé est resoumis, ni sur un flag faux', async () => {
+    await submit('n1', { flag: 'BREACH{un}' });
+    notifyUnlocked.mockClear();
+
+    await submit('n1', { flag: 'BREACH{un}' });
+    await submit('n2', { flag: 'BREACH{faux}' });
+
+    expect(notifyUnlocked).not.toHaveBeenCalled();
   });
 });

@@ -46,3 +46,60 @@
     @apply outline-2 outline-offset-2 outline-secure;
   }
 }
+
+/* Fiches de cours : HTML produit par le rendu Markdown d'@analogjs/content. */
+@layer components {
+  .fiche-content {
+    @apply max-w-[760px] text-lg text-ink-2;
+
+    p,
+    ul,
+    ol,
+    pre,
+    blockquote,
+    table {
+      @apply mb-4;
+    }
+    h2 {
+      @apply mt-8 mb-3 text-2xl font-bold text-ink;
+    }
+    h2:first-child {
+      @apply mt-0;
+    }
+    ul,
+    ol {
+      @apply flex flex-col gap-1.5 pl-6;
+    }
+    ul {
+      @apply list-disc;
+    }
+    ol {
+      @apply list-decimal;
+    }
+    strong {
+      @apply text-ink;
+    }
+    code {
+      @apply rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[0.85em];
+    }
+    pre {
+      @apply overflow-x-auto rounded-xl border border-line bg-console p-4 text-base;
+    }
+    pre code {
+      @apply bg-transparent p-0;
+    }
+    blockquote {
+      @apply rounded-xl border-l-[3px] border-accent bg-surface p-5 text-ink;
+    }
+    table {
+      @apply w-full border-collapse text-base;
+    }
+    th,
+    td {
+      @apply border border-line px-3 py-2 text-left align-top;
+    }
+    th {
+      @apply bg-surface;
+    }
+  }
+}

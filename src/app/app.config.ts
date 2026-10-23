@@ -8,6 +8,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideClientHydration, withNoIncrementalHydration } from '@angular/platform-browser';
+import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { provideFileRouter, requestContextInterceptor } from '@analogjs/router';
 
 import { forwardCookieInterceptor } from './forward-cookie.interceptor';
@@ -16,6 +17,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideFileRouter(),
+    // Fiches de cours (src/content/fiches/*.md).
+    provideContent(withMarkdownRenderer()),
     provideHttpClient(
       withInterceptors([forwardCookieInterceptor, requestContextInterceptor]),
       // Niveau 4 (CSRF) : Angular recopie le cookie XSRF-TOKEN dans l'en-tête X-XSRF-TOKEN
