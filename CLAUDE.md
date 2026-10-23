@@ -33,6 +33,9 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
 - `npm run preview` — lance le build (`node dist/analog/server/index.mjs`)
 - `npm test` — tests Vitest une fois ; `npm run test:watch` en continu
 - `npm run test:coverage` — tests + couverture (échoue sous le seuil)
+- `npm run lint` — ESLint (TS + templates Angular), bloquant en CI
+- CI/CD : `.github/workflows/ci.yml` (lint, tests, Semgrep, gitleaks,
+  npm audit, image Docker + Grype, déploiement VPS) ; voir `docs/DEPLOIEMENT.md`
 
 ## Architecture
 - `src/app/pages/` : routes (fichiers `*.page.ts`), données serveur via un
@@ -87,6 +90,9 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   expliquant la faille. Les failles ne touchent **que des faux services isolés**
   (fausse banque, faux bot, chatbot simulé) ; les vraies parties du site
   (progression, API des flags, sessions) restent toujours sécurisées.
+  Si Semgrep (CI) signale ce code, ajouter `// nosemgrep: <id-de-règle>` juste
+  au-dessus de la ligne, sous le commentaire `VULNERABLE (démo)` ; les faux
+  secrets du niveau 5 vont de même dans `.gitleaksignore`.
 - Hors code vulnérable assumé : ne jamais utiliser `bypassSecurityTrust*`,
   `innerHTML` non nettoyé, ni `'unsafe-inline'` / `'unsafe-eval'` pour les
   scripts dans la CSP.

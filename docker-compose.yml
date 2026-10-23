@@ -1,0 +1,43 @@
+# Production sur le VPS. Les valeurs viennent du fichier .env posé à côté
+# (jamais commité) : voir docs/DEPLOIEMENT.md.
+services:
+  app:
+    image: ghcr.io/bertheadrien/frontendavance:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      FLAG_SECRET: ${FLAG_SECRET:?FLAG_SECRET manquant dans .env}
+      BREACH_VULNERABLE_MODE: ${BREACH_VULNERABLE_MODE:-false}
+    volumes:
+      - sqlite-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    # Pas de port publié : seul Caddy (HTTPS) est exposé.
+    expose:
+      - "3000"
+
+  # Reverse proxy HTTPS (certificat Let's Encrypt automatique). Les cookies sont
+  # `Secure` en production : le site doit être servi en HTTPS.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN manquant dans .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  sqlite-data:
+  caddy-data:
+  caddy-config:

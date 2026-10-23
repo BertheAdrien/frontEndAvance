@@ -141,6 +141,7 @@ export class SearchLevel {
   protected asTrustedHtml(query: string): SafeHtml {
     // VULNERABLE (démo): le terme cherché vient de l'URL et est déclaré « sûr » sans
     // nettoyage. Injecté via [innerHTML], un attribut onerror s'exécute dans la page.
+    // nosemgrep: typescript.angular.security.audit.angular-domsanitizer.angular-bypasssecuritytrust
     return this.sanitizer.bypassSecurityTrustHtml(query);
   }
 

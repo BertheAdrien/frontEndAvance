@@ -1,0 +1,178 @@
+name: CI / CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+  IMAGE_NAME: ghcr.io/bertheadrien/frontendavance
+
+jobs:
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+
+  test:
+    name: Tests unitaires + couverture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # Échoue sous le seuil `coverage.thresholds` de vite.config.ts.
+      - run: npm run test:coverage -- --coverage.reporter=text-summary --coverage.reporter=html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v5
+      # Code vulnérable assumé (démo) : marqué `// nosemgrep: <règle>` à côté du
+      # commentaire `// VULNERABLE (démo):`. Toute autre alerte fait échouer le job.
+      - run: >
+          semgrep scan
+          --config p/default --config p/typescript --config p/owasp-top-ten
+          --metrics=off --error
+          --sarif-output=semgrep.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('semgrep.sarif') != ''
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  secrets:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  audit:
+    name: Dépendances (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # Dépendances livrées en production uniquement, à partir de « high ».
+      - run: npm audit --omit=dev --audit-level=high
+
+  docker:
+    name: Image Docker (build + scan)
+    needs: [lint, test, sast, secrets, audit]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: vars
+        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Scan de l'image (Grype)
+        id: grype
+        uses: anchore/scan-action@v6
+        with:
+          image: ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
+          severity-cutoff: critical
+          only-fixed: true
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always() && steps.grype.outputs.sarif != ''
+        with:
+          sarif_file: ${{ steps.grype.outputs.sarif }}
+          category: grype
+      - name: Publication sur GHCR (main uniquement)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker tag "$IMAGE_NAME:${{ steps.vars.outputs.tag }}" "$IMAGE_NAME:latest"
+          docker push "$IMAGE_NAME:${{ steps.vars.outputs.tag }}"
+          docker push "$IMAGE_NAME:latest"
+
+  deploy:
+    name: Déploiement VPS
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://${{ vars.DOMAIN }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Copie de la configuration sur le VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: docker-compose.yml,Caddyfile
+          target: ${{ vars.VPS_APP_DIR || 'breach-academy' }}
+      - name: Mise à jour des conteneurs
+        uses: appleboy/ssh-action@v1
+        env:
+          IMAGE_TAG: ${{ needs.docker.outputs.tag }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_DIR: ${{ vars.VPS_APP_DIR || 'breach-academy' }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: IMAGE_TAG,GHCR_USER,GHCR_TOKEN,APP_DIR
+          script: |
+            set -eu
+            cd "$APP_DIR"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            IMAGE_TAG="$IMAGE_TAG" docker compose pull app
+            IMAGE_TAG="$IMAGE_TAG" docker compose up -d --remove-orphans
+            docker logout ghcr.io
+            docker image prune -f
