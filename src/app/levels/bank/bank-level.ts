@@ -25,9 +25,12 @@ import type { LevelMode, PublicLevel } from '../../../shared/level';
 
       <div class="grid gap-6 md:grid-cols-2">
         <section aria-labelledby="compte-title" class="flex flex-col gap-4 rounded-xl border border-line bg-surface p-6">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2">
             <h2 id="compte-title" class="text-xl font-bold">Banque Fantôme</h2>
-            <button type="button" (click)="refresh()" class="min-h-9 rounded-md px-2 text-sm text-muted hover:text-ink">Rafraîchir</button>
+            <div class="flex items-center gap-1">
+              <button type="button" (click)="reset()" [disabled]="resetting()" class="min-h-9 rounded-md px-2 text-sm text-muted hover:text-ink disabled:opacity-50">Réinitialiser</button>
+              <button type="button" (click)="refresh()" class="min-h-9 rounded-md px-2 text-sm text-muted hover:text-ink">Rafraîchir</button>
+            </div>
           </div>
           <p class="text-sm text-muted">Solde du compte</p>
           <p class="font-mono text-3xl font-bold">{{ solde() ?? '—' }} €</p>
@@ -171,8 +174,24 @@ export class BankLevel {
     ];
   });
 
+  protected readonly resetting = signal(false);
+
   protected refresh(): void {
     this.version.update((v) => v + 1);
+  }
+
+  /** Remet le compte à son état initial sans redémarrer le serveur. */
+  protected reset(): void {
+    if (this.resetting()) return;
+    this.resetting.set(true);
+    this.http.delete<AccountResponse>('/api/virement-fantome/compte').subscribe({
+      next: () => {
+        this.resetting.set(false);
+        this.receipt.set(undefined);
+        this.refresh();
+      },
+      error: () => this.resetting.set(false),
+    });
   }
 
   protected submitTransfer(event: Event): void {

@@ -56,6 +56,19 @@ describe('GuestbookLevel', () => {
     expect(botView().textContent).toContain(payload);
   });
 
+  it('retire un message via la croix puis recharge la liste', async () => {
+    const { fixture, el, backend } = await setup('vulnerable', [message('à retirer')]);
+
+    (el.querySelector('[aria-labelledby="messages-title"] li button[aria-label="Retirer ce message"]') as HTMLButtonElement).click();
+
+    backend.expectOne({ method: 'DELETE', url: '/api/livre-d-or/messages/1' }).flush({ messages: [] });
+    TestBed.tick();
+    backend.expectOne((r) => r.url === '/api/livre-d-or/messages' && r.method === 'GET').flush({ messages: [] });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el.querySelector('[aria-labelledby="messages-title"]')?.textContent).toContain('Aucun message');
+  });
+
   it('publie un message puis recharge la liste du livre d\'or', async () => {
     const { fixture, el, backend } = await setup('vulnerable', []);
 

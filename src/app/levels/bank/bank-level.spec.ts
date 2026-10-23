@@ -52,6 +52,20 @@ describe('BankLevel', () => {
     backend.expectOne((r) => r.url === '/api/virement-fantome/compte').flush({ solde: 900, historique: [] });
   });
 
+  it('réinitialise le compte via un DELETE puis recharge', async () => {
+    const { el, backend } = await setup('vulnerable', {
+      solde: 500,
+      historique: [{ beneficiaire: 'PIRATE_CSRF', montant: 500, date: '', frauduleux: true }],
+      flag: 'BREACH{virement}',
+    });
+
+    [...el.querySelectorAll('button')].find((b) => b.textContent?.includes('Réinitialiser'))!.click();
+
+    backend.expectOne({ method: 'DELETE', url: '/api/virement-fantome/compte' }).flush({ solde: 1000, historique: [] });
+    TestBed.tick();
+    backend.expectOne((r) => r.url === '/api/virement-fantome/compte' && r.method === 'GET').flush({ solde: 1000, historique: [] });
+  });
+
   it('en mode sécurisé, la fiche des tests passe au vert', async () => {
     const { el } = await setup('secure');
 

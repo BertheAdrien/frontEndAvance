@@ -9,6 +9,7 @@ import {
   BANK_LEVEL_ID,
   XSRF_COOKIE,
   createAccountHandler,
+  createAccountResetHandler,
   createBankStore,
   createTransferHandler,
   createTrapPageHandler,
@@ -28,6 +29,7 @@ const app = (vulnerableModeEnabled = true, store = createBankStore()) => {
     createApp().use(
       createRouter()
         .get('/compte', createAccountHandler(deps))
+        .delete('/compte', createAccountResetHandler(deps))
         .get('/virement', createTransferHandler(deps))
         .post('/virement', createTransferHandler(deps))
         .get('/piege', createTrapPageHandler()),
@@ -76,6 +78,22 @@ describe('GET /compte', () => {
     expect(setCookie).toMatch(new RegExp(`${XSRF_COOKIE}=`, 'i'));
     expect(setCookie).not.toMatch(new RegExp(`${XSRF_COOKIE}=[^;]*;[^,]*HttpOnly`, 'i'));
     expect(setCookie).toMatch(new RegExp(`${BANK_COOKIE}=[^,]*SameSite=Strict`, 'i'));
+  });
+});
+
+describe('DELETE /compte — réinitialisation', () => {
+  it('remet le solde à son montant initial et vide l\'historique', async () => {
+    const store = createBankStore();
+    const handler = app(true, store);
+    const headers = { cookie: cookie({ mode: 'vulnerable', bank: BANK_SESSION }), accept: 'application/json' };
+    await req(handler, '/virement?beneficiaire=PIRATE_CSRF&montant=500', { headers });
+
+    const reset = await json(await req(handler, '/compte', { method: 'DELETE', headers }));
+    expect(reset['solde']).toBe(1000);
+    expect(reset['historique']).toEqual([]);
+
+    // Et le flag déjà gagné ne traîne plus dans la session réinitialisée.
+    expect((await json(await req(handler, '/compte', { headers })))['flag']).toBeUndefined();
   });
 });
 

@@ -55,7 +55,19 @@ import type { LevelMode } from '../../../shared/level';
           <ul class="m-0 flex list-none flex-col gap-3 p-0">
             @for (message of messageList(); track message.id) {
               <li class="rounded-xl border border-line bg-surface p-4">
-                <div class="mb-1 text-sm text-muted"><strong class="text-ink">{{ message.author }}</strong></div>
+                <div class="mb-1 flex items-start justify-between gap-2">
+                  <strong class="text-sm text-ink">{{ message.author }}</strong>
+                  <button
+                    type="button"
+                    (click)="removeMessage(message.id)"
+                    [disabled]="removing()"
+                    aria-label="Retirer ce message"
+                    title="Retirer ce message"
+                    class="-m-1 shrink-0 rounded p-1 leading-none text-muted hover:text-vuln disabled:opacity-50"
+                  >
+                    ✕
+                  </button>
+                </div>
                 <!-- Le livre d'or s'affiche toujours comme du texte : la faille est dans la relecture par le bot. -->
                 <p class="m-0 break-words font-mono text-sm text-ink-2">{{ message.body }}</p>
               </li>
@@ -110,6 +122,7 @@ export class GuestbookBoard {
   protected readonly author = signal('agent_42');
   protected readonly body = signal('');
   protected readonly pending = signal(false);
+  protected readonly removing = signal(false);
   protected readonly formError = signal('');
   protected readonly botRunning = signal(false);
   protected readonly loot = signal<string[]>([]);
@@ -143,6 +156,19 @@ export class GuestbookBoard {
           );
         },
       });
+  }
+
+  /** Retire un message du livre d'or (le serveur ne supprime que ceux du joueur courant). */
+  protected removeMessage(id: number): void {
+    if (this.removing()) return;
+    this.removing.set(true);
+    this.http.delete<GuestbookResponse>(`/api/livre-d-or/messages/${id}`).subscribe({
+      next: () => {
+        this.removing.set(false);
+        this.reload.update((v) => v + 1);
+      },
+      error: () => this.removing.set(false),
+    });
   }
 
   /** Simule la relecture par le bot admin, entièrement dans le navigateur du joueur. */

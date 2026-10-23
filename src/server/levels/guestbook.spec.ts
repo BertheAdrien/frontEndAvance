@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createApp, createRouter, toWebHandler } from 'h3';
 import type { DatabaseSync } from 'node:sqlite';
 
+import type { GuestbookResponse } from '../../shared/guestbook';
 import { openDatabase } from '../db';
 import { PLAYER_COOKIE } from '../player';
 import { MODE_COOKIE } from '../mode';
@@ -13,8 +14,10 @@ import {
   createBotSessionHandler,
   createCollectHandler,
   createEvilCollector,
+  createGuestbookDeleteHandler,
   createGuestbookListHandler,
   createGuestbookPostHandler,
+  deleteMessage,
   hasDangerousHtml,
   listMessages,
 } from './guestbook';
@@ -46,6 +49,7 @@ const app = (vulnerableModeEnabled: boolean, collector = createEvilCollector()) 
         .get('/messages', createGuestbookListHandler({ db: () => db }))
         .post('/messages', createGuestbookPostHandler({ db: () => db, vulnerableModeEnabled: () => vulnerableModeEnabled }))
         .post('/bot-session', createBotSessionHandler({ levels: () => levels, vulnerableModeEnabled: () => vulnerableModeEnabled }))
+        .delete('/messages/:id', createGuestbookDeleteHandler({ db: () => db }))
         .get('/collect', createCollectHandler({ collector }))
         .delete('/collect', createCollectHandler({ collector })),
     ),
@@ -59,6 +63,37 @@ const post = (handler: ReturnType<typeof app>, path: string, player: string, mod
       body: JSON.stringify(body),
     }),
   );
+
+const del = (handler: ReturnType<typeof app>, path: string, player: string) =>
+  handler(new Request(`http://localhost${path}`, { method: 'DELETE', headers: { cookie: cookies(player) } }));
+
+describe('DELETE /messages/:id', () => {
+  it('retire un message du joueur et renvoie la liste à jour', async () => {
+    addMessage(db, PLAYER_A, 'agent_42', 'à garder');
+    addMessage(db, PLAYER_A, 'agent_42', 'à retirer');
+    const cible = listMessages(db, PLAYER_A).find((m) => m.body === 'à retirer')!;
+
+    const response = await del(app(true), `/messages/${cible.id}`, PLAYER_A);
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as GuestbookResponse;
+    expect(body.messages.map((m) => m.body)).toEqual(['à garder']);
+  });
+
+  it("ne retire jamais le message d'un autre joueur", async () => {
+    addMessage(db, PLAYER_B, 'quelquun', 'message de B');
+    const cible = listMessages(db, PLAYER_B)[0];
+
+    await del(app(true), `/messages/${cible.id}`, PLAYER_A);
+
+    expect(deleteMessage(db, PLAYER_A, cible.id)).toBe(false);
+    expect(listMessages(db, PLAYER_B)).toHaveLength(1);
+  });
+
+  it('rejette un identifiant non numérique', async () => {
+    expect((await del(app(true), '/messages/abc', PLAYER_A)).status).toBe(400);
+  });
+});
 
 describe('hasDangerousHtml', () => {
   it('repère une balise ou un gestionnaire d\'événement, pas un texte ordinaire', () => {

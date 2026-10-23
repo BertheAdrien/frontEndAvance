@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite';
-import { createError, defineEventHandler, getQuery, readBody, setResponseHeader } from 'h3';
+import { createError, defineEventHandler, getQuery, getRouterParam, readBody, setResponseHeader } from 'h3';
 import { z } from 'zod';
 
 import type { GuestbookMessage, GuestbookResponse, LootResponse } from '../../shared/guestbook';
@@ -36,10 +36,28 @@ export function listMessages(db: DatabaseSync, playerId: string): GuestbookMessa
   return rows.map((row) => ({ id: row.id, author: row.author, body: row.body, createdAt: row.created_at }));
 }
 
+/** Supprime un message du joueur. Le filtre sur `player_id` empêche de toucher à ceux d'un autre. */
+export function deleteMessage(db: DatabaseSync, playerId: string, id: number): boolean {
+  const result = db.prepare('DELETE FROM guestbook WHERE id = ? AND player_id = ?').run(id, playerId);
+  return result.changes > 0;
+}
+
 /** Liste les messages du joueur courant. */
 export function createGuestbookListHandler(deps: { db: () => DatabaseSync }) {
   return defineEventHandler((event): GuestbookResponse => {
     return { messages: listMessages(deps.db(), getPlayerId(event)) };
+  });
+}
+
+/** Retire un message du joueur courant et renvoie la liste à jour. */
+export function createGuestbookDeleteHandler(deps: { db: () => DatabaseSync }) {
+  return defineEventHandler((event): GuestbookResponse => {
+    const playerId = getPlayerId(event);
+    const id = Number(getRouterParam(event, 'id'));
+    if (!Number.isInteger(id) || id <= 0) throw createError({ statusCode: 400, message: 'Identifiant invalide' });
+
+    deleteMessage(deps.db(), playerId, id);
+    return { messages: listMessages(deps.db(), playerId) };
   });
 }
 

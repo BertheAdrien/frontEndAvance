@@ -40,6 +40,7 @@ interface Account {
 export interface BankStore {
   read(sessionId: string): Account | undefined;
   ensure(sessionId: string): Account;
+  reset(sessionId: string): void;
 }
 
 export function createBankStore(): BankStore {
@@ -54,6 +55,7 @@ export function createBankStore(): BankStore {
       }
       return account;
     },
+    reset: (id) => void accounts.delete(id),
   };
 }
 
@@ -149,6 +151,18 @@ export function createAccountHandler(deps: Deps) {
     const account = openAccount(event, secure, deps.store);
     setResponseHeader(event, 'Cache-Control', 'no-store');
     return { solde: account.solde, historique: account.historique, ...(account.flag ? { flag: account.flag } : {}) };
+  });
+}
+
+/** Réinitialise le compte de la session (solde et historique) : évite de redémarrer le serveur. */
+export function createAccountResetHandler(deps: Deps) {
+  return defineEventHandler((event): AccountResponse => {
+    const secure = getLevelMode(event, deps.vulnerableModeEnabled()) === 'secure';
+    const id = getCookie(event, BANK_COOKIE);
+    if (id) deps.store.reset(id);
+    const account = openAccount(event, secure, deps.store);
+    setResponseHeader(event, 'Cache-Control', 'no-store');
+    return { solde: account.solde, historique: account.historique };
   });
 }
 
