@@ -26,7 +26,13 @@ function setup() {
     return el.querySelector('[role="status"]')?.textContent?.trim() ?? '';
   };
 
-  return { backend: TestBed.inject(HttpTestingController), submit, message, captured };
+  const changeLevel = (levelId: string) => {
+    fixture.componentRef.setInput('levelId', levelId);
+    fixture.detectChanges();
+  };
+  const inputValue = () => (el.querySelector('input') as HTMLInputElement).value;
+
+  return { backend: TestBed.inject(HttpTestingController), submit, message, captured, changeLevel, inputValue };
 }
 
 describe('FlagForm', () => {
@@ -63,6 +69,17 @@ describe('FlagForm', () => {
       .flush(null, { status: 429, statusText: 'Too Many Requests', headers: { 'Retry-After': '42' } });
 
     expect(message()).toContain('42 s');
+  });
+
+  it('repart d\'un champ et d\'un message vides quand on passe au niveau suivant', () => {
+    const { backend, submit, message, changeLevel, inputValue } = setup();
+    submit('BREACH{abc}');
+    backend.expectOne('/api/levels/recherche-bavarde/flag').flush({ result: 'captured', levels: [] });
+
+    changeLevel('livre-d-or');
+
+    expect(inputValue()).toBe('');
+    expect(message()).toBe('');
   });
 
   it("n'envoie rien quand le champ est vide", () => {

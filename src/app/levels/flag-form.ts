@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, inject, input, linkedSignal, output, signal } from '@angular/core';
 
 import type { FlagSubmissionResponse, PublicLevel } from '../../shared/level';
 
@@ -50,9 +50,10 @@ export class FlagForm {
   /** Émis avec la progression à jour quand le flag est accepté. */
   readonly captured = output<PublicLevel[]>();
 
-  protected readonly flag = signal('');
+  // La page de niveau est réutilisée d'un niveau à l'autre : saisie et message repartent à vide quand le niveau change.
+  protected readonly flag = linkedSignal({ source: this.levelId, computation: () => '' });
   protected readonly pending = signal(false);
-  protected readonly feedback = signal<Feedback | null>(null);
+  protected readonly feedback = linkedSignal<string, Feedback | null>({ source: this.levelId, computation: () => null });
 
   protected submit(event: Event): void {
     event.preventDefault();
