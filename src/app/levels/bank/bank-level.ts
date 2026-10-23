@@ -142,7 +142,8 @@ export class BankLevel {
 
   private readonly version = signal(0);
   protected readonly account = httpResource<AccountResponse>(() =>
-    this.isBrowser ? { url: '/api/virement-fantome/compte', params: { v: this.version() } } : undefined,
+    // `mode` relance la lecture à chaque bascule : en mode sécurisé, c'est elle qui pose le cookie XSRF.
+    this.isBrowser ? { url: '/api/virement-fantome/compte', params: { v: this.version(), mode: this.mode() } } : undefined,
   );
   protected readonly solde = computed(() => this.account.value()?.solde);
   protected readonly historique = computed(() => this.account.value()?.historique ?? []);

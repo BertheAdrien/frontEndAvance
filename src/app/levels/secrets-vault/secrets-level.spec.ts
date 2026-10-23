@@ -36,11 +36,11 @@ async function setup(mode: LevelMode, config: VaultConfigResponse, history: GitH
 
   const backend = TestBed.inject(HttpTestingController);
   TestBed.tick();
-  backend.expectOne('/api/coffre-qui-fuit/config').flush(config);
-  backend.expectOne('/api/coffre-qui-fuit/historique-git').flush(history);
+  backend.expectOne((r) => r.url === '/api/coffre-qui-fuit/config').flush(config);
+  backend.expectOne((r) => r.url === '/api/coffre-qui-fuit/historique-git').flush(history);
   await fixture.whenStable();
   fixture.detectChanges();
-  return { el: fixture.nativeElement as HTMLElement };
+  return { fixture, backend, el: fixture.nativeElement as HTMLElement };
 }
 
 describe('SecretsLevel', () => {
@@ -56,5 +56,18 @@ describe('SecretsLevel', () => {
 
     expect(el.textContent).not.toContain('BREACH{');
     expect(el.textContent).toContain('aucune clé');
+  });
+
+  it('recharge les deux fuites quand le joueur bascule de mode, sans recharger la page', async () => {
+    const { fixture, backend, el } = await setup('vulnerable', vulnerableConfig, vulnerableHistory);
+
+    fixture.componentRef.setInput('mode', 'secure');
+    TestBed.tick();
+    backend.expectOne((r) => r.url === '/api/coffre-qui-fuit/config').flush(secureConfig);
+    backend.expectOne((r) => r.url === '/api/coffre-qui-fuit/historique-git').flush(secureHistory);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(el.textContent).not.toContain('BREACH{');
   });
 });

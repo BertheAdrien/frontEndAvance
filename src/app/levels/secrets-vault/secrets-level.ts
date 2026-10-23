@@ -109,11 +109,12 @@ export class SecretsLevel {
   readonly level = input.required<PublicLevel>();
   readonly mode = input.required<LevelMode>();
 
+  // Le mode fait foi côté serveur (cookie) : le passer en paramètre relance les requêtes à chaque bascule.
   protected readonly config = httpResource<VaultConfigResponse>(() =>
-    this.isBrowser ? '/api/coffre-qui-fuit/config' : undefined,
+    this.isBrowser ? { url: '/api/coffre-qui-fuit/config', params: { mode: this.mode() } } : undefined,
   );
   protected readonly history = httpResource<GitHistoryResponse>(() =>
-    this.isBrowser ? '/api/coffre-qui-fuit/historique-git' : undefined,
+    this.isBrowser ? { url: '/api/coffre-qui-fuit/historique-git', params: { mode: this.mode() } } : undefined,
   );
 
   protected readonly banner = computed(() =>

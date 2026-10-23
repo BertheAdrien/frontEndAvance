@@ -25,6 +25,15 @@ async function setup(mode: LevelMode, account: AccountResponse = { solde: 1000, 
 afterEach(() => TestBed.inject(HttpTestingController).verify());
 
 describe('BankLevel', () => {
+  it('relit le compte quand le joueur bascule de mode (le mode sécurisé pose alors le cookie XSRF)', async () => {
+    const { fixture, backend } = await setup('vulnerable');
+
+    fixture.componentRef.setInput('mode', 'secure');
+    TestBed.tick();
+
+    backend.expectOne((r) => r.url === '/api/virement-fantome/compte').flush({ solde: 1000, historique: [] });
+  });
+
   it('affiche le flag quand le compte a subi un virement frauduleux', async () => {
     const { el } = await setup('vulnerable', {
       solde: 500,
