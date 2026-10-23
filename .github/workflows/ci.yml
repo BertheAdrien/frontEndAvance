@@ -1,8 +1,9 @@
 name: CI / CD
 
 on:
+  # CI sur chaque push, quelle que soit la branche.
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
   workflow_dispatch:
 
@@ -139,7 +140,9 @@ jobs:
   deploy:
     name: Déploiement VPS
     needs: docker
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Désactivé tant que la variable de dépôt DEPLOY_ENABLED ne vaut pas « true »
+    # (secrets VPS_* et variable DOMAIN à configurer avant, voir docs/DEPLOIEMENT.md).
+    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: production
