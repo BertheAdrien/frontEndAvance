@@ -7,6 +7,14 @@ const SCHEMA = `
     captured_at TEXT NOT NULL DEFAULT (datetime('now')),
     PRIMARY KEY (player_id, level_id)
   );
+
+  CREATE TABLE IF NOT EXISTS guestbook (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    player_id  TEXT NOT NULL,
+    author     TEXT NOT NULL,
+    body       TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `;
 
 /** Ouvre la base SQLite (`:memory:` pour les tests) et applique le schéma. */

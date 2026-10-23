@@ -7,6 +7,7 @@ import type { Type } from '@angular/core';
  */
 const LEVEL_COMPONENTS: Record<string, () => Promise<Type<unknown>>> = {
   'recherche-bavarde': () => import('./search-engine/search-level').then((m) => m.SearchLevel),
+  'livre-d-or': () => import('./guestbook/guestbook-level').then((m) => m.GuestbookLevel),
 };
 
 export function loadLevelComponent(levelId: string): Promise<Type<unknown>> {

