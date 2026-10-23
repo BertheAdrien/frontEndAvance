@@ -35,7 +35,9 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
 - `npm run test:coverage` — tests + couverture (échoue sous le seuil)
 - `npm run lint` — ESLint (TS + templates Angular), bloquant en CI
 - CI/CD : `.github/workflows/ci.yml` (lint, tests, Semgrep, gitleaks,
-  npm audit, image Docker + Grype, déploiement VPS) ; voir `docs/DEPLOIEMENT.md`
+  npm audit, image Docker + Grype, déploiement VPS) ; voir `docs/DEPLOIEMENT.md`.
+  Actions GitHub figées par SHA de commit (`@<sha> # vN`), sinon Semgrep échoue.
+  Déploiement actif seulement si la variable de dépôt `DEPLOY_ENABLED=true`.
 
 ## Architecture
 - `src/app/pages/` : routes (fichiers `*.page.ts`), données serveur via un
