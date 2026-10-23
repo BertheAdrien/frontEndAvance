@@ -73,6 +73,10 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   Angular ne l'applique pas. Le niveau 3 recharge la page pour l'appliquer.
 - Routes API d'un niveau : préfixe dédié (`/api/<levelId>/…`), pas sous
   `/api/levels/[id]/` qui porte l'API des flags.
+- En `npm run dev`, Analog ne route vers Nitro que les chemins sous `/api` : une
+  route serveur à la racine (ex. `/piege`) renvoie 404 en dev (elle tombe sur le
+  SPA) alors qu'elle marche dans le serveur buildé (`preview`). Mettre toute route
+  serveur HTML sous `/api/…`.
 - Niveau 4 (CSRF) : la démo doit tourner sur `localhost` **et** `127.0.0.1` (deux
   origines, un seul serveur : `npm run preview` écoute toutes les interfaces). Sur
   http local, un cookie `SameSite=None` n'est pas accepté et un POST inter-site

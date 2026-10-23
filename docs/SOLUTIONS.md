@@ -100,9 +100,11 @@ rapport forgé).
 **Faille** : la fausse banque (`src/server/levels/bank.ts`, session `ba_bank`)
 accepte en mode vulnérable un virement sur le **seul cookie de session**, et même
 par un simple `GET` — un changement d'état sur une requête « sûre ». La page piège
-est servie sur une **autre origine** (`GET /piege`, `src/server/routes/piege.get.ts`) :
-quand la banque est sur `http://localhost:<port>`, le piège est sur
-`http://127.0.0.1:<port>` (sites différents pour le navigateur, même serveur).
+est servie sur une **autre origine** (`GET /api/virement-fantome/piege`,
+`src/server/routes/api/virement-fantome/piege.get.ts`) : quand la banque est sur
+`http://localhost:<port>`, le piège est sur `http://127.0.0.1:<port>` (sites
+différents pour le navigateur, même serveur). Elle est sous `/api` car en
+`npm run dev` Analog ne sert que ce préfixe côté serveur.
 
 Prérequis : lancer le jeu via `localhost` **ou** `127.0.0.1` (par ex.
 `npm run build && npm run preview`) pour disposer des deux origines.

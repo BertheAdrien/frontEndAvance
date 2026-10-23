@@ -149,8 +149,9 @@ export class BankLevel {
   protected readonly trapUrl = computed(() => {
     if (!this.isBrowser) return undefined;
     const { protocol, hostname, host } = location;
-    if (hostname === 'localhost') return `${protocol}//${host.replace('localhost', '127.0.0.1')}/piege`;
-    if (hostname === '127.0.0.1') return `${protocol}//${host.replace('127.0.0.1', 'localhost')}/piege`;
+    const trap = '/api/virement-fantome/piege';
+    if (hostname === 'localhost') return `${protocol}//${host.replace('localhost', '127.0.0.1')}${trap}`;
+    if (hostname === '127.0.0.1') return `${protocol}//${host.replace('127.0.0.1', 'localhost')}${trap}`;
     return undefined;
   });
 
