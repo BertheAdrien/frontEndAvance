@@ -84,6 +84,11 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   (navigation de premier plan → le cookie `SameSite=Lax` part encore). Le mode
   sécurisé interdit le `GET`, passe en `SameSite=Strict`, vérifie `Origin` et exige
   le double-submit `XSRF-TOKEN` → `X-XSRF-TOKEN` (`withXsrfConfiguration`).
+- Niveau 5 (secrets) : la clé fuitée **est** le flag, dérivé à l'exécution — jamais
+  de littéral secret dans le dépôt. Elle n'est injectée (config du bundle, diff Git
+  simulé) qu'en mode vulnérable, par le serveur. Hook pre-commit gitleaks dans
+  `.githooks/pre-commit` (activer une fois : `git config core.hooksPath .githooks`) ;
+  il ne bloque rien si gitleaks est absent du PATH (la CI l'exécute).
 
 ## Règles impératives
 - **Aucun secret dans le code ni dans Git** (clés API, mots de passe, tokens,

@@ -10,6 +10,7 @@ const LEVEL_COMPONENTS: Record<string, () => Promise<Type<unknown>>> = {
   'livre-d-or': () => import('./guestbook/guestbook-level').then((m) => m.GuestbookLevel),
   'mur-invisible': () => import('./csp-wall/csp-level').then((m) => m.CspLevel),
   'virement-fantome': () => import('./bank/bank-level').then((m) => m.BankLevel),
+  'coffre-qui-fuit': () => import('./secrets-vault/secrets-level').then((m) => m.SecretsLevel),
 };
 
 export function loadLevelComponent(levelId: string): Promise<Type<unknown>> {

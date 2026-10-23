@@ -1,0 +1,18 @@
+#!/bin/sh
+# Hook pre-commit : empêche un secret d'entrer dans le dépôt (voir niveau 5 du CTF).
+# Activation (une fois par clone) : git config core.hooksPath .githooks
+# Installer gitleaks : https://github.com/gitleaks/gitleaks
+#   (scoop install gitleaks · brew install gitleaks · choco install gitleaks)
+
+if command -v gitleaks >/dev/null 2>&1; then
+  echo "gitleaks : analyse des modifications indexées…"
+  if ! gitleaks protect --staged --redact; then
+    echo
+    echo "✖ gitleaks a détecté un secret potentiel. Commit annulé."
+    echo "  Faux secret pédagogique assumé (niveau 5) ? Ajoutez son empreinte à .gitleaksignore."
+    exit 1
+  fi
+else
+  echo "gitleaks absent du PATH : analyse des secrets ignorée (la CI l'exécute de toute façon)."
+  echo "  À installer pour bloquer les secrets dès le commit : https://github.com/gitleaks/gitleaks"
+fi

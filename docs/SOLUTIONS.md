@@ -133,7 +133,29 @@ virement **légitime** depuis la banque reste possible dans les deux modes.
 
 ## Niveau 5 — Secrets : « Le coffre qui fuit » (étape 6)
 
-_À compléter._
+**Faille** : deux fuites isolées (`src/server/levels/secrets-vault.ts`) révèlent la
+même clé — qui **est** le flag. Le flag reste dérivé de `FLAG_SECRET` (jamais écrit
+dans le dépôt) : il n'est injecté qu'à l'exécution, et seulement en mode vulnérable.
+
+**Solution (deux chemins, même flag)**
+1. Ouvrir `/niveaux/coffre-qui-fuit` en mode **Vulnérable**.
+2. **Fuite n°1 — le bundle** : la config téléchargée par le navigateur
+   (`GET /api/coffre-qui-fuit/config`) contient une `analyticsKey`. La page
+   l'affiche telle quelle ; dans un vrai audit on la lirait dans les DevTools
+   (onglet **Réseau** → `config`, ou **Sources**). Cette clé est le flag.
+3. **Fuite n°2 — l'historique Git** : `GET /api/coffre-qui-fuit/historique-git`
+   simule un `git log -p`. Un commit ajoute la clé dans `environment.ts`, un commit
+   suivant la « retire » — mais elle reste visible dans le commit d'origine. Le
+   panneau **gitleaks** la retrouve (règle `generic-api-key`) : même clé, même flag.
+4. Recopier le flag dans « Soumettre le flag ».
+
+**Leçon** : tout ce qui part au front est public ; `git rm` n'efface pas
+l'historique (il faut réécrire l'historique + révoquer la clé) ; gitleaks détecte
+ces fuites, d'où le hook pre-commit (`.githooks/pre-commit`) et le job gitleaks en CI.
+
+**En mode sécurisé** : la config ne contient aucune clé, l'historique montre une
+lecture via `process.env`, gitleaks ne trouve rien et aucun flag ne transite vers
+le navigateur.
 
 ## Niveau 6 — Injection de prompt : « Le chatbot trop serviable » (étape 7)
 
