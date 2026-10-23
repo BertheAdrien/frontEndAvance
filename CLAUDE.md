@@ -89,6 +89,11 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   simulé) qu'en mode vulnérable, par le serveur. Hook pre-commit gitleaks dans
   `.githooks/pre-commit` (activer une fois : `git config core.hooksPath .githooks`) ;
   il ne bloque rien si gitleaks est absent du PATH (la CI l'exécute).
+- Niveau 6 (chatbot) : moteur de règles sur un texte normalisé (sans accents,
+  minuscules). L'injection indirecte lit le livre d'or **du joueur** (table du
+  niveau 2) : modifier ce schéma casse aussi le niveau 6. Pour tester l'API avec
+  curl sous Windows, envoyer le corps depuis un fichier UTF-8 (`--data-binary @f`),
+  sinon les accents arrivent mal encodés et aucune règle ne se déclenche.
 
 ## Règles impératives
 - **Aucun secret dans le code ni dans Git** (clés API, mots de passe, tokens,

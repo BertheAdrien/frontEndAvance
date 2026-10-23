@@ -11,6 +11,7 @@ const LEVEL_COMPONENTS: Record<string, () => Promise<Type<unknown>>> = {
   'mur-invisible': () => import('./csp-wall/csp-level').then((m) => m.CspLevel),
   'virement-fantome': () => import('./bank/bank-level').then((m) => m.BankLevel),
   'coffre-qui-fuit': () => import('./secrets-vault/secrets-level').then((m) => m.SecretsLevel),
+  'chatbot-serviable': () => import('./chatbot/chatbot-level').then((m) => m.ChatbotLevel),
 };
 
 export function loadLevelComponent(levelId: string): Promise<Type<unknown>> {
