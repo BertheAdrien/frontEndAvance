@@ -60,6 +60,12 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
 - Pas de `declare global` dans un fichier de composant : le build Analog
   retombe alors en JIT pour toute l'app (SSR en erreur « JIT compiler
   unavailable », sans erreur au build ni en test). Typer par un cast local.
+- Angular 22 : `provideClientHydration()` active par défaut l'hydratation
+  incrémentale, donc l'event replay, qui injecte des scripts inline dans le HTML
+  SSR. Garder `withNoIncrementalHydration()` : sinon toute CSP sans
+  `'unsafe-inline'` bloque ces scripts et émet des violations parasites.
+- Une CSP vient de l'en-tête HTTP du **document** : une navigation interne
+  Angular ne l'applique pas. Le niveau 3 recharge la page pour l'appliquer.
 - Routes API d'un niveau : préfixe dédié (`/api/<levelId>/…`), pas sous
   `/api/levels/[id]/` qui porte l'API des flags.
 
