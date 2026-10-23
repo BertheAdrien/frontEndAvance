@@ -20,7 +20,7 @@ import { GuestbookBoard } from './guestbook-board';
         </span>
       </div>
 
-      <app-guestbook-board [mode]="mode()">
+      <app-guestbook-board level="livre-d-or" [mode]="mode()">
         <section aria-labelledby="tests-title" class="flex flex-col gap-3 rounded-xl border border-line bg-surface p-6">
           <h2 id="tests-title" class="text-lg font-bold">La preuve par les tests</h2>
           <ul class="m-0 flex list-none flex-col gap-2.5 p-0">

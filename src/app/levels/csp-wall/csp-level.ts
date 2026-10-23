@@ -56,7 +56,7 @@ import { GuestbookBoard } from '../guestbook/guestbook-board';
         <p role="status" class="text-sm text-vuln empty:hidden">{{ error() }}</p>
       </section>
 
-      <app-guestbook-board [mode]="mode()" (botFinished)="refreshViolationsSoon()">
+      <app-guestbook-board level="mur-invisible" [mode]="mode()" (botFinished)="refreshViolationsSoon()">
         <section aria-labelledby="violations-title" class="overflow-hidden rounded-xl border border-line bg-console">
           <div class="flex items-center justify-between gap-2 border-b border-line px-4 py-2">
             <h2 id="violations-title" class="font-mono text-sm text-muted">Console CSP (report-uri)</h2>

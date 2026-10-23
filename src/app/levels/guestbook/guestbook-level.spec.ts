@@ -36,16 +36,21 @@ describe('GuestbookLevel', () => {
     const { fixture, backend, clickBot, botView } = await setup('vulnerable', [message(payload)]);
 
     clickBot();
-    backend.expectOne({ method: 'POST', url: '/api/livre-d-or/bot-session' }).flush({ session: 'ba_admin=BREACH{x}' });
+    // Chaque relecture repart d'une console vide : le butin des relectures précédentes est effacé.
+    backend.expectOne({ method: 'DELETE', url: '/api/evil/collect' }).flush({ loot: [] });
+    const session = backend.expectOne({ method: 'POST', url: '/api/livre-d-or/bot-session' });
+    expect(session.request.body).toEqual({ level: 'livre-d-or' });
+    session.flush({ session: 'ba_admin=BREACH{x}' });
     await fixture.whenStable();
 
     expect(botView().querySelector('img[src="x"]')).not.toBeNull();
   });
 
   it('en mode sécurisé, le bot affiche le même message comme du texte, sans créer de balise', async () => {
-    const { clickBot, botView } = await setup('secure', [message(payload)]);
+    const { backend, clickBot, botView } = await setup('secure', [message(payload)]);
 
     clickBot();
+    backend.expectOne({ method: 'DELETE', url: '/api/evil/collect' }).flush({ loot: [] });
 
     expect(botView().querySelector('img')).toBeNull();
     expect(botView().textContent).toContain(payload);

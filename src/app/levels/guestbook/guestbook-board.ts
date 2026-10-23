@@ -100,6 +100,8 @@ export class GuestbookBoard {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   readonly mode = input.required<LevelMode>();
+  /** Niveau qui accueille le livre d'or : le serveur ne remet le flag au bot que sur le niveau 2. */
+  readonly level = input.required<'livre-d-or' | 'mur-invisible'>();
   /** Émis quand le bot a fini sa relecture (butin relevé). */
   readonly botFinished = output<void>();
 
@@ -149,6 +151,14 @@ export class GuestbookBoard {
     this.botRunning.set(true);
     this.loot.set([]);
 
+    // Vide le butin des relectures précédentes : la console ne montre que celui de cette relecture.
+    this.http.delete<LootResponse>('/api/evil/collect').subscribe({
+      next: () => this.startBot(),
+      error: () => this.finishBot(),
+    });
+  }
+
+  private startBot(): void {
     const render = () => {
       this.renderBotView(this.messageList(), this.mode() === 'vulnerable');
       // Laisse le temps aux payloads (onerror asynchrone) d'exfiltrer avant de relever le butin.
@@ -156,7 +166,7 @@ export class GuestbookBoard {
     };
 
     if (this.mode() === 'vulnerable') {
-      this.http.post<{ session: string }>('/api/livre-d-or/bot-session', {}).subscribe({
+      this.http.post<{ session: string }>('/api/livre-d-or/bot-session', { level: this.level() }).subscribe({
         next: ({ session }) => {
           // VULNERABLE (démo): la session du bot admin n'est pas HttpOnly, donc lisible
           // par document.cookie — c'est ce que le payload volera.

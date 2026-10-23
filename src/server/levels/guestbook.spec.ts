@@ -46,7 +46,8 @@ const app = (vulnerableModeEnabled: boolean, collector = createEvilCollector()) 
         .get('/messages', createGuestbookListHandler({ db: () => db }))
         .post('/messages', createGuestbookPostHandler({ db: () => db, vulnerableModeEnabled: () => vulnerableModeEnabled }))
         .post('/bot-session', createBotSessionHandler({ levels: () => levels, vulnerableModeEnabled: () => vulnerableModeEnabled }))
-        .get('/collect', createCollectHandler({ collector })),
+        .get('/collect', createCollectHandler({ collector }))
+        .delete('/collect', createCollectHandler({ collector })),
     ),
   );
 
@@ -109,6 +110,19 @@ describe('POST /api/livre-d-or/bot-session', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
 
+  it("sur le niveau 3, délivre une session admin sans le flag du livre d'or", async () => {
+    const response = await post(app(true), '/bot-session', PLAYER_A, 'vulnerable', { level: 'mur-invisible' });
+
+    expect(response.status).toBe(200);
+    const { session } = await response.json();
+    expect(session).toMatch(/^ba_admin=/);
+    expect(session).not.toContain('BREACH{');
+  });
+
+  it('refuse (400) un niveau inconnu', async () => {
+    expect((await post(app(true), '/bot-session', PLAYER_A, 'vulnerable', { level: 'autre' })).status).toBe(400);
+  });
+
   it('refuse (403) et ne divulgue aucun flag en mode sécurisé', async () => {
     const response = await post(app(true), '/bot-session', PLAYER_A, 'secure', {});
 
@@ -134,5 +148,21 @@ describe('GET /api/evil/collect', () => {
     expect((await seen.json()).loot).toEqual(['ba_admin=BREACH{stocke}']);
     const other = await handler(new Request('http://localhost/collect', { headers: { cookie: cookies(PLAYER_B) } }));
     expect((await other.json()).loot).toEqual([]);
+  });
+});
+
+describe('DELETE /api/evil/collect', () => {
+  it('vide le butin du joueur avant une nouvelle relecture, sans toucher aux autres', async () => {
+    const collector = createEvilCollector();
+    collector.collect(PLAYER_A, 'ba_admin=BREACH{stocke}');
+    collector.collect(PLAYER_B, 'ba_admin=BREACH{stocke}');
+
+    const response = await app(true, collector)(
+      new Request('http://localhost/collect', { method: 'DELETE', headers: { cookie: cookies(PLAYER_A) } }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(collector.loot(PLAYER_A)).toEqual([]);
+    expect(collector.loot(PLAYER_B)).toHaveLength(1);
   });
 });

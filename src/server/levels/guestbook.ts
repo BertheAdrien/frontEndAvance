@@ -6,6 +6,7 @@ import type { GuestbookMessage, GuestbookResponse, LootResponse } from '../../sh
 import { getLevelMode } from '../mode';
 import { getPlayerId } from '../player';
 import type { Level } from './catalog';
+import { CSP_LEVEL_ID } from './csp-wall';
 
 /** Niveau 2 : livre d'or stocké en SQLite, relu par un faux bot administrateur. */
 export const GUESTBOOK_LEVEL_ID = 'livre-d-or';
@@ -68,20 +69,29 @@ export function createGuestbookPostHandler(deps: {
   });
 }
 
+const botSessionSchema = z.object({
+  level: z.enum([GUESTBOOK_LEVEL_ID, CSP_LEVEL_ID]).default(GUESTBOOK_LEVEL_ID),
+});
+
 /**
- * Session du faux bot admin : un cookie non HttpOnly qui contient le flag, lisible par
- * `document.cookie`. Le serveur ne le délivre qu'en mode vulnérable (comme le reveal du
- * niveau 1) : en mode sécurisé, le flag ne sort jamais.
+ * Session du faux bot admin : un cookie non HttpOnly, lisible par `document.cookie`.
+ * Sur le niveau 2, il contient le flag (le voler est l'objectif) ; sur le niveau 3, qui
+ * réutilise le même bot, c'est une session ordinaire : le flag s'y gagne par la CSP.
+ * Le serveur ne la délivre qu'en mode vulnérable : en mode sécurisé, le flag ne sort jamais.
  */
 export function createBotSessionHandler(deps: { levels: () => Level[]; vulnerableModeEnabled: () => boolean }) {
-  return defineEventHandler((event) => {
+  return defineEventHandler(async (event) => {
     if (getLevelMode(event, deps.vulnerableModeEnabled()) !== 'vulnerable') {
-      throw createError({ statusCode: 403, message: 'Le bot admin n\'a pas de session en mode sécurisé' });
+      throw createError({ statusCode: 403, message: "Le bot admin n'a pas de session en mode sécurisé" });
     }
-    const level = deps.levels().find((l) => l.id === GUESTBOOK_LEVEL_ID);
-    if (!level) throw createError({ statusCode: 404, message: 'Niveau inconnu' });
+    const parsed = botSessionSchema.safeParse((await readBody(event).catch(() => undefined)) ?? {});
+    if (!parsed.success) throw createError({ statusCode: 400, message: 'Niveau inconnu' });
 
     setResponseHeader(event, 'Cache-Control', 'no-store');
+    if (parsed.data.level === CSP_LEVEL_ID) return { session: 'ba_admin=session-admin-sans-flag' };
+
+    const level = deps.levels().find((l) => l.id === GUESTBOOK_LEVEL_ID);
+    if (!level) throw createError({ statusCode: 404, message: 'Niveau inconnu' });
     return { session: `ba_admin=${level.flag}` };
   });
 }
@@ -90,6 +100,7 @@ export function createBotSessionHandler(deps: { levels: () => Level[]; vulnerabl
 export interface EvilCollector {
   collect(playerId: string, loot: string): void;
   loot(playerId: string): string[];
+  clear(playerId: string): void;
 }
 
 const MAX_LOOT = 20;
@@ -106,6 +117,9 @@ export function createEvilCollector(): EvilCollector {
     loot(playerId) {
       return store.get(playerId) ?? [];
     },
+    clear(playerId) {
+      store.delete(playerId);
+    },
   };
 }
 
@@ -120,6 +134,7 @@ export function useEvilCollector(): EvilCollector {
 /**
  * Point de collecte piégé. Avec `?c=…`, enregistre ce que le payload a exfiltré ;
  * sans paramètre, renvoie le butin déjà collecté pour l'afficher dans la console du niveau.
+ * En `DELETE`, vide le butin du joueur : chaque relecture du bot repart d'une console vide.
  */
 export function createCollectHandler(deps: { collector: EvilCollector }) {
   return defineEventHandler((event): LootResponse | { ok: true } => {
@@ -127,6 +142,10 @@ export function createCollectHandler(deps: { collector: EvilCollector }) {
     const c = getQuery(event)['c'];
 
     setResponseHeader(event, 'Cache-Control', 'no-store');
+    if (event.method === 'DELETE') {
+      deps.collector.clear(playerId);
+      return { loot: [] };
+    }
     if (typeof c === 'string' && c.length > 0) {
       deps.collector.collect(playerId, c.slice(0, 500));
       return { ok: true };

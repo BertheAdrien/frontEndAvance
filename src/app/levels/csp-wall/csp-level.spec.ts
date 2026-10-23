@@ -60,6 +60,17 @@ describe('CspLevel', () => {
     expect(console).toContain('BREACH{mur}');
   });
 
+  it("le bot du niveau 3 demande sa propre session, pas celle porteuse du flag du livre d'or", async () => {
+    const { el, backend } = await setup('vulnerable');
+
+    (el.querySelector('[aria-labelledby="bot-title"] button') as HTMLButtonElement).click();
+    backend.expectOne({ method: 'DELETE', url: '/api/evil/collect' }).flush({ loot: [] });
+
+    expect(backend.expectOne({ method: 'POST', url: '/api/livre-d-or/bot-session' }).request.body).toEqual({
+      level: 'mur-invisible',
+    });
+  });
+
   it('en mode sécurisé, la CSP est imposée : le joueur ne peut pas la désactiver', async () => {
     const { cspButton } = await setup('secure');
 
