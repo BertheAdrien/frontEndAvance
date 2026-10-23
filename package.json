@@ -15,7 +15,8 @@
     "preview": "node dist/analog/server/index.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "web-vitals": "node scripts/web-vitals-lighthouse.mjs"
   },
   "private": true,
   "dependencies": {
@@ -42,6 +43,7 @@
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.4",
     "tslib": "^2.3.0",
+    "web-vitals": "^6.2.3",
     "zod": "^4.6.7"
   },
   "devDependencies": {

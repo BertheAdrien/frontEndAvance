@@ -15,6 +15,11 @@ const SCHEMA = `
     body       TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS pseudonyms (
+    player_id TEXT PRIMARY KEY,
+    pseudonym TEXT NOT NULL UNIQUE COLLATE NOCASE
+  );
 `;
 
 /** Ouvre la base SQLite (`:memory:` pour les tests) et applique le schéma. */

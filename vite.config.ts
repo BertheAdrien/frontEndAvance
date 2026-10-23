@@ -14,8 +14,10 @@ export default defineConfig(() => ({
   },
   plugins: [
     analog({
-      // Pas de pré-rendu par défaut : l'accueil dépend du joueur (SSR). Le SSG sera activé route par route.
-      prerender: { routes: [] },
+      // Pas de pré-rendu par défaut : l'accueil dépend du joueur (SSR). Le SSG est activé route par route.
+      prerender: { routes: ['/classement/ssg'] },
+      // Comparaison CSR / SSR / SSG du classement : cette route est servie sans rendu serveur.
+      nitro: { routeRules: { '/classement/csr': { ssr: false } } },
     }),
     tailwindcss()
   ],

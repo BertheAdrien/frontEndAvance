@@ -69,6 +69,14 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
   incrémentale, donc l'event replay, qui injecte des scripts inline dans le HTML
   SSR. Garder `withNoIncrementalHydration()` : sinon toute CSP sans
   `'unsafe-inline'` bloque ces scripts et émet des violations parasites.
+- `afterNextRender` s'exécute aussi pendant le SSR d'Analog : garder le code
+  navigateur (ex. `web-vitals`, qui lit `document`) derrière
+  `isPlatformBrowser(inject(PLATFORM_ID))`, sinon `unhandledRejection` au
+  pré-rendu et à chaque rendu serveur (le build n'échoue pas).
+- Classement CSR/SSR/SSG : rendu fixé par `vite.config.ts` (`nitro.routeRules`
+  `ssr: false` pour le CSR, `prerender.routes` pour le SSG). Liens entre les
+  versions en `href` simple : un `routerLink` ne recharge pas le document, donc ni
+  rendu serveur ni mesure Web Vitals.
 - Une CSP vient de l'en-tête HTTP du **document** : une navigation interne
   Angular ne l'applique pas. Le niveau 3 recharge la page pour l'appliquer.
 - Routes API d'un niveau : préfixe dédié (`/api/<levelId>/…`), pas sous
