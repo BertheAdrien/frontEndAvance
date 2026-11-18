@@ -92,7 +92,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', time
               </table>
             </div>
           } @else {
-            <p class="text-muted">Personne au classement pour l'instant. <a href="/classement">Choisissez un pseudonyme</a> pour y figurer.</p>
+            <p class="text-muted">Personne au classement pour l'instant. <a href="/classement" class="underline underline-offset-2">Choisissez un pseudonyme</a> pour y figurer.</p>
           }
         } @else if (failed()) {
           <p role="alert" class="text-vuln">Impossible de charger le classement.</p>

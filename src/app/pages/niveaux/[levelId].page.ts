@@ -68,9 +68,9 @@ export const routeMeta = {
           <p role="status" class="text-lg">
             @if (next(); as nextLevel) {
               Niveau suivant déverrouillé :
-              <a [routerLink]="['/niveaux', nextLevel.id]" class="font-semibold">{{ nextLevel.title }}</a>
+              <a [routerLink]="['/niveaux', nextLevel.id]" class="font-semibold underline">{{ nextLevel.title }}</a>
             } @else {
-              Tous les niveaux sont réussis. <a routerLink="/" class="font-semibold">Retour aux niveaux</a>
+              Tous les niveaux sont réussis. <a routerLink="/" class="font-semibold underline">Retour aux niveaux</a>
             }
           </p>
         }
