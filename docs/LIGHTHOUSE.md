@@ -47,9 +47,24 @@ axe-core (WCAG 2.2 AA) trouvait en plus :
 - **Meta description** par défaut dans `index.html` (SEO, extrait des moteurs).
 - **`public/robots.txt`** : site indexable, `/api/` exclu.
 
-## Après
+## Après (build du 18/11/2026, mobile simulé)
 
-À compléter avec la sortie de `npm run lighthouse`.
+| Route | Accessibilité | Bonnes pratiques | SEO |
+|---|---|---|---|
+| / | 100 | 100 | 100 |
+| /niveaux/recherche-bavarde | 100 | 100 | 100 |
+| /classement | 100 | 100 | 100 |
+| /classement/ssr | 100 | 100 | 100 |
+| /fiches | 100 | 100 | 100 |
+| /fiches/csrf | 100 | 100 | 100 |
+
+Aucun audit Lighthouse en échec, et `e2e/accessibilite.e2e.ts` (axe, WCAG 2.2 AA)
+ne trouve plus aucune violation sur les pages et états audités.
+
+Limite : un 100 Lighthouse ne garantit pas la conformité WCAG. Les outils
+automatiques ne détectent qu'une partie des critères (environ un tiers) :
+navigation au clavier, ordre de lecture et pertinence des textes alternatifs
+restent à vérifier à la main.
 
 ## Ce qui était déjà en place
 
