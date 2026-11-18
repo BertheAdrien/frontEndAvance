@@ -33,6 +33,8 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
 - `npm run preview` — lance le build (`node dist/analog/server/index.mjs`)
 - `npm test` — tests Vitest une fois ; `npm run test:watch` en continu
 - `npm run test:coverage` — tests + couverture (échoue sous le seuil)
+- `npm run test:e2e` — build puis E2E Playwright (`e2e/*.e2e.ts`, pas `*.spec.ts`
+  sinon Vitest les ramasse) ; `test:e2e:nobuild` pour relancer sans rebuild
 - `npm run lint` — ESLint (TS + templates Angular), bloquant en CI
 - CI/CD : `.github/workflows/ci.yml` (lint, tests, Semgrep, gitleaks,
   npm audit, image Docker + Grype, déploiement VPS) ; voir `docs/DEPLOIEMENT.md`.

@@ -8,13 +8,14 @@ Chaque job est une étape distincte dans l'onglet *Actions* de GitHub.
 |---|---|---|
 | Lint | ESLint + angular-eslint | une erreur de lint |
 | Tests unitaires + couverture | Vitest + v8 | un test échoue ou lignes < seuil (`vite.config.ts`) |
+| Tests E2E | Playwright (Chromium, serveur buildé) | une attaque réussit en mode sécurisé ou échoue en mode vulnérable |
 | SAST | Semgrep (règles `p/default`, `p/typescript`, `p/owasp-top-ten`) | une alerte non justifiée par `// nosemgrep` |
 | Secrets | gitleaks (tout l'historique Git) | un secret détecté |
 | Dépendances | `npm audit --omit=dev` | une faille *high* ou *critical* en production |
 | Image Docker | build multi-stage + Grype | une faille *critical* corrigeable dans l'image |
 | Déploiement VPS | SSH + `docker compose` | — (uniquement sur `main`) |
 
-Les cinq premiers jobs tournent en parallèle ; l'image n'est construite que
+Les six premiers jobs tournent en parallèle ; l'image n'est construite que
 s'ils passent tous, et poussée sur GHCR (`ghcr.io/bertheadrien/frontendavance`)
 seulement sur `main`. Les rapports Semgrep et Grype arrivent dans l'onglet
 *Security → Code scanning* (gratuit, dépôt public). La couverture HTML est
