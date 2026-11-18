@@ -20,7 +20,58 @@ seulement sur `main`. Les rapports Semgrep et Grype arrivent dans l'onglet
 *Security → Code scanning* (gratuit, dépôt public). La couverture HTML est
 téléchargeable en artefact du job de tests.
 
-## Préparer le VPS (une seule fois)
+## Déploiement actuel : VPS avec nginx existant
+
+Le site tourne sur https://breach-academy.bertadrien.fr. Le VPS héberge déjà
+d'autres sites derrière nginx (ports 80/443 pris) : pas de Caddy, nginx fait le
+HTTPS (certificat Let's Encrypt via `certbot --nginx`) et relaie vers le conteneur.
+
+| Élément | Emplacement sur le VPS |
+|---|---|
+| Compose (copie de `docker-compose.nginx.yml`) + `.env` (chmod 600) | `~/breach-academy/` |
+| Sources envoyées pour le build | `~/breach-academy-src/` |
+| Vhost nginx | `/etc/nginx/sites-available/breach-academy.bertadrien.fr.conf` |
+
+Mettre à jour le site depuis le poste (build **sur le VPS** avec le `Dockerfile`
+du dépôt, puis redémarrage du conteneur) :
+
+```bash
+VPS=debian@<ip-du-vps> scripts/deploy-vps.sh
+```
+
+Vhost nginx (avant `certbot --nginx -d <domaine> --redirect`, qui ajoute le TLS) :
+
+```nginx
+server {
+    listen 80;
+    server_name breach-academy.bertadrien.fr;
+    location / {
+        proxy_pass http://127.0.0.1:3010;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+`FLAG_SECRET` a été généré sur le serveur (`openssl rand -hex 32`) et n'en sort pas.
+
+### Piège : build en JIT sur une machine lente
+
+Analog construit le client et le SSR **en parallèle** avec une seule compilation
+Angular ; le `buildEnd` du premier fini la libérait, et les composants que le SSR
+traitait ensuite partaient en JIT, sans avertissement (« JIT compiler
+unavailable » au rendu). Invisible sur un poste multicœur, systématique sur le
+VPS (1 CPU). Corrigé par `build/angular-build-end.ts` (branché dans
+`vite.config.ts`, testé). Vérifier une image :
+
+```bash
+docker run --rm --entrypoint sh <image> -c 'grep -rl "__decorate(\[" server/chunks | wc -l'   # doit afficher 0
+```
+
+## Préparer le VPS (une seule fois) — variante Caddy + CI
 
 Prérequis : Docker + plugin Compose, ports 80 et 443 ouverts, un nom de domaine
 (enregistrement A) pointant vers le VPS. HTTPS est obligatoire : les cookies

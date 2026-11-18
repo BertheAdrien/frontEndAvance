@@ -105,6 +105,11 @@ web jouable en mode vulnérable puis sécurisé. Détails, niveaux et planning :
 - PWA (`vite-plugin-pwa`) : Analog résout une config client **puis** SSR avec la
   même instance du plugin ; sans le wrapper `clientConfigOnly` de `vite.config.ts`,
   aucun `sw.js` n'est généré (et le build ne dit rien).
+- Build client et SSR en parallèle avec une seule compilation Angular : sans le
+  wrapper `releaseAngularCompilationLast` (`build/angular-build-end.ts`) dans
+  `vite.config.ts`, une machine lente (VPS, Docker, CI) produit un SSR en JIT
+  (« JIT compiler unavailable »), sans erreur au build. Déploiement :
+  `VPS=debian@<ip> scripts/deploy-vps.sh` (voir `docs/DEPLOIEMENT.md`).
 - Fiches de cours : chaque `src/content/**/*.md` devient **aussi une route**
   (`src/content/fiches/csrf.md` → `/fiches/csrf`), habillée par
   `pages/fiches.page.ts`. Sans `content.highlighter` dans `vite.config.ts`, le build

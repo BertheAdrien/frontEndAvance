@@ -5,6 +5,8 @@ import analog from '@analogjs/platform';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { releaseAngularCompilationLast } from './build/angular-build-end';
+
 /**
  * Analog résout une config par environnement (client puis SSR) avec la même instance de
  * vite-plugin-pwa : il garderait la config SSR et ne générerait jamais le service worker.
@@ -31,7 +33,8 @@ export default defineConfig(() => ({
     mainFields: ['module'],
   },
   plugins: [
-    analog({
+    // Course client/SSR du plugin Angular : voir build/angular-build-end.ts.
+    ...releaseAngularCompilationLast([analog({
       // Fiches de cours : Markdown converti en HTML au build (sans highlighter, les .md ne sont pas transformés).
       content: { highlighter: 'prism' },
       // Pas de pré-rendu par défaut : l'accueil dépend du joueur (SSR). Le SSG est activé route par route.
@@ -45,7 +48,7 @@ export default defineConfig(() => ({
           '/fiches/**': { ssr: false },
         },
       },
-    }),
+    })]),
     tailwindcss(),
     ...clientConfigOnly(VitePWA({
       // Enregistré dans main.ts : pas de script inline injecté dans le HTML (CSP).

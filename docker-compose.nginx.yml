@@ -1,0 +1,28 @@
+# Variante pour un VPS où nginx sert déjà d'autres sites sur 80/443 (déploiement actuel
+# de https://breach-academy.bertadrien.fr). L'image est construite sur le VPS par
+# scripts/deploy-vps.sh ; nginx (hôte) fait le HTTPS et relaie vers 127.0.0.1:3010.
+# À copier en ~/breach-academy/docker-compose.yml, à côté du .env (jamais commité).
+services:
+  app:
+    image: breach-academy:local
+    restart: unless-stopped
+    environment:
+      FLAG_SECRET: ${FLAG_SECRET:?FLAG_SECRET manquant dans .env}
+      BREACH_VULNERABLE_MODE: ${BREACH_VULNERABLE_MODE:-false}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+    volumes:
+      - sqlite-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    # Uniquement sur la boucle locale : seul nginx (HTTPS) est exposé.
+    ports:
+      - "127.0.0.1:3010:3000"
+
+volumes:
+  sqlite-data:
